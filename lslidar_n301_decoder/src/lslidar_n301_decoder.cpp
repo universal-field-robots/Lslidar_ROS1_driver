@@ -136,28 +136,29 @@ void LslidarN301Decoder::publishScan()
 {
 	sensor_msgs::LaserScan::Ptr scan(new sensor_msgs::LaserScan);
 
-  if(sweep_data->scans[0].points.size() <= 360)
+  if(sweep_data->scans[0].points.size() <= 1)
 		return;
 
 	scan->header.frame_id = child_frame_id;
 	scan->header.stamp = sweep_data->header.stamp;
   scan->angle_max = 0.0;
   scan->angle_min = 2.0*M_PI;
-  scan->angle_increment = (scan->angle_max-scan->angle_min)/360;
+  scan->angle_increment = (scan->angle_max-scan->angle_min)/3600;
 
 //	scan->time_increment = motor_speed_/1e8;
 	scan->range_min = 0.3;
 	scan->range_max = 100.0;
-  scan->ranges.reserve(360);
-  scan->intensities.reserve(360);
+  scan->ranges.reserve(3600);
+  scan->intensities.reserve(3600);
 
-  std::vector<point_struct> mean_points[360] = {};
+  std::vector<point_struct> mean_points[3600] = {};
   point_struct temp_point;
   for(uint16_t i = 0; i < sweep_data->scans[0].points.size(); i++)
   {
-    int degree = round(sweep_data->scans[0].points[i].azimuth * RAD_TO_DEG);
-    if (degree >= 360) degree = 0;
-    if (degree < 0) degree = 359;
+    int degree = round(sweep_data->scans[0].points[i].azimuth * RAD_TO_DEG * 10);
+//    ROS_INFO("degree = %d", degree);
+    if (degree >= 3600) degree = 0;
+    if (degree < 0) degree = 3599;
     temp_point.distance = sweep_data->scans[0].points[i].distance;
     temp_point.intensity = sweep_data->scans[0].points[i].intensity;
     mean_points[degree].push_back(temp_point);
@@ -167,9 +168,15 @@ void LslidarN301Decoder::publishScan()
 
 
   point_struct mean_point;
-  for(uint16_t i = 0; i < 360; i++)
+  for(uint16_t i = 0; i < 3600; i++)
 	{
 //    ROS_INFO("%f", sweep_data->scans[0].points[i].azimuth);
+    if ( mean_points[i].size() == 0)
+    {
+      scan->ranges.push_back(0);
+      scan->intensities.push_back(0);
+      continue;
+    }
     mean_point = getMeans(mean_points[i]);
     scan->ranges.push_back(mean_point.distance);
     scan->intensities.push_back(mean_point.intensity);
@@ -182,6 +189,7 @@ void LslidarN301Decoder::publishScan()
 point_struct LslidarN301Decoder::getMeans(std::vector<point_struct> clusters)
 {
   int num = clusters.size();
+
   double mean_distance = 0, mean_intensity = 0;
   point_struct tmp;
   for (int i = 0; i < num; i++)
@@ -272,7 +280,7 @@ void LslidarN301Decoder::decodePacket(const RawPacket* packet) {
 
 void LslidarN301Decoder::packetCallback(
     const lslidar_n301_msgs::LslidarN301PacketConstPtr& msg) {
-
+//  ROS_WARN("packetCallBack");
   // Convert the msg to the raw packet type.
   const RawPacket* raw_packet = (const RawPacket*) (&(msg->data[0]));
 
@@ -287,7 +295,8 @@ void LslidarN301Decoder::packetCallback(
   //    otherwise, new_sweep_start will be FIRINGS_PER_PACKET.
   size_t new_sweep_start = 0;
   do {
-    if (firings[new_sweep_start].firing_azimuth < last_azimuth) break;
+//    if (firings[new_sweep_start].firing_azimuth < last_azimuth) break;
+    if (fabs(firings[new_sweep_start].firing_azimuth - last_azimuth) > M_PI) break;
     else {
       last_azimuth = firings[new_sweep_start].firing_azimuth;
       ++new_sweep_start;
@@ -444,7 +453,7 @@ void LslidarN301Decoder::packetCallback(
 
     packet_start_time += FIRING_TOFFSET * (end_fir_idx-start_fir_idx);
   }
-
+//  ROS_WARN("pack end");
   return;
 }
 
