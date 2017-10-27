@@ -20,21 +20,21 @@
 #include <lslidar_n301_decoder/lslidar_n301_decoder.h>
 
 int main(int argc, char** argv) {
-  ros::init(argc, argv, "lslidar_n301_decoder_node");
-  ros::NodeHandle nh;
-  ros::NodeHandle pnh("~");
+    ros::init(argc, argv, "lslidar_n301_decoder_node");
+    ros::NodeHandle nh;
+    ros::NodeHandle pnh("~");
 
-  lslidar_n301_decoder::LslidarN301DecoderPtr decoder(
-      new lslidar_n301_decoder::LslidarN301Decoder(nh, pnh));
+    lslidar_n301_decoder::LslidarN301DecoderPtr decoder(
+                new lslidar_n301_decoder::LslidarN301Decoder(nh, pnh));
 
-  if (!decoder->initialize()) {
-    ROS_INFO("Cannot initialize the decoder...");
-    return -1;
-  }
+    if (!decoder->initialize()) {
+        ROS_INFO("Cannot initialize the decoder...");
+        return -1;
+    }
 
-  ProfilerStart("lslidar_decoder.prof");
-  ros::spin();
-  ProfilerStop();
+    ProfilerStart("lslidar_decoder.prof");
+    ros::spin();
+    ProfilerStop();
 
-  return 0;
+    return 0;
 }

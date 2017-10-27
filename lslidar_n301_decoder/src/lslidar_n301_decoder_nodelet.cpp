@@ -20,16 +20,16 @@
 namespace lslidar_n301_decoder {
 
 void LslidarN301DecoderNodelet::onInit() {
-  decoder.reset(new LslidarN301Decoder(
-        getNodeHandle(), getPrivateNodeHandle()));
-  if(!decoder->initialize()) {
-    ROS_ERROR("Cannot initialize the lslidar puck decoder...");
+    decoder.reset(new LslidarN301Decoder(
+                      getNodeHandle(), getPrivateNodeHandle()));
+    if(!decoder->initialize()) {
+        ROS_ERROR("Cannot initialize the lslidar puck decoder...");
+        return;
+    }
     return;
-  }
-  return;
 }
 
 } // end namespace lslidar_n301_decoder
 
 PLUGINLIB_DECLARE_CLASS(lslidar_n301_decoder, LslidarN301Nodelet,
-    lslidar_n301_decoder::LslidarN301DecoderNodelet, nodelet::Nodelet);
+                        lslidar_n301_decoder::LslidarN301DecoderNodelet, nodelet::Nodelet);

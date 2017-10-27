@@ -29,46 +29,46 @@ namespace lslidar_n301_driver
 {
 
 LslidarN301DriverNodelet::LslidarN301DriverNodelet():
-  running(false) {
-  return;
+    running(false) {
+    return;
 }
 
 LslidarN301DriverNodelet::~LslidarN301DriverNodelet() {
-  if (running) {
-    NODELET_INFO("shutting down driver thread");
-    running = false;
-    device_thread->join();
-    NODELET_INFO("driver thread stopped");
-  }
-  return;
+    if (running) {
+        NODELET_INFO("shutting down driver thread");
+        running = false;
+        device_thread->join();
+        NODELET_INFO("driver thread stopped");
+    }
+    return;
 }
 
 void LslidarN301DriverNodelet::onInit()
 {
-  // start the driver
-  lslidar_n301_driver.reset(
-      new LslidarN301Driver(getNodeHandle(), getPrivateNodeHandle()));
-  if (!lslidar_n301_driver->initialize()) {
-    ROS_ERROR("Cannot initialize lslidar driver...");
-    return;
-  }
+    // start the driver
+    lslidar_n301_driver.reset(
+                new LslidarN301Driver(getNodeHandle(), getPrivateNodeHandle()));
+    if (!lslidar_n301_driver->initialize()) {
+        ROS_ERROR("Cannot initialize lslidar driver...");
+        return;
+    }
 
-  // spawn device poll thread
-  running = true;
-  device_thread = boost::shared_ptr< boost::thread >
-    (new boost::thread(boost::bind(&LslidarN301DriverNodelet::devicePoll, this)));
+    // spawn device poll thread
+    running = true;
+    device_thread = boost::shared_ptr< boost::thread >
+            (new boost::thread(boost::bind(&LslidarN301DriverNodelet::devicePoll, this)));
 }
 
 /** @brief Device poll thread main loop. */
 void LslidarN301DriverNodelet::devicePoll()
 {
-  while(ros::ok()) {
-    // poll device until end of file
-    running = lslidar_n301_driver->polling();
-    if (!running)
-      break;
-  }
-  running = false;
+    while(ros::ok()) {
+        // poll device until end of file
+        running = lslidar_n301_driver->polling();
+        if (!running)
+            break;
+    }
+    running = false;
 }
 
 } // namespace lslidar_driver

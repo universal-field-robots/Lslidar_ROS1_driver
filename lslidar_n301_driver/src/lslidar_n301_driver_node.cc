@@ -20,17 +20,18 @@
 
 int main(int argc, char** argv)
 {
-  ros::init(argc, argv, "lslidar_n301_driver_node");
-  ros::NodeHandle node;
-  ros::NodeHandle private_nh("~");
+    ros::init(argc, argv, "lslidar_n301_driver_node");
+    ros::NodeHandle node;
+    ros::NodeHandle private_nh("~");
 
-  // start the driver
-  lslidar_n301_driver::LslidarN301Driver driver(node, private_nh);
+    // start the driver
+    lslidar_n301_driver::LslidarN301Driver driver(node, private_nh);
 
-  // loop until shut down or end of file
-  while(ros::ok() && driver.polling()) {
-    ros::spinOnce();
-  }
+    // loop until shut down or end of file
+    while(ros::ok() && driver.polling()) {
+        ros::spinOnce();
 
-  return 0;
+    }
+
+    return 0;
 }

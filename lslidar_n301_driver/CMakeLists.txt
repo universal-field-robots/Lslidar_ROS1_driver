@@ -60,14 +60,14 @@ add_dependencies(lslidar_n301_driver_nodelet
 )
 
 # Leishen n301 lidar node
-#add_executable(lslidar_n301_driver_node
-#  src/lslidar_n301_driver_node.cc
-#)
-#target_link_libraries(lslidar_n301_driver_node
-#  lslidar_n301_driver
-#  ${catkin_LIBRARIES}
-#)
-#add_dependencies(lslidar_n301_driver_node
-#  ${${PROJECT_NAME}_EXPORTED_TARGETS}
-#  ${catkin_EXPORTED_TARGETS}
-#)
+add_executable(lslidar_n301_driver_node
+  src/lslidar_n301_driver_node.cc
+)
+target_link_libraries(lslidar_n301_driver_node
+  lslidar_n301_driver
+  ${catkin_LIBRARIES}
+)
+add_dependencies(lslidar_n301_driver_node
+  ${${PROJECT_NAME}_EXPORTED_TARGETS}
+  ${catkin_EXPORTED_TARGETS}
+)

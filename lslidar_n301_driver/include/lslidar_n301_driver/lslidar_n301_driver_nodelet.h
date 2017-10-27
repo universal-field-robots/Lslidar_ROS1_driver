@@ -31,18 +31,18 @@ class LslidarN301DriverNodelet: public nodelet::Nodelet
 {
 public:
 
-  LslidarN301DriverNodelet();
-  ~LslidarN301DriverNodelet();
+    LslidarN301DriverNodelet();
+    ~LslidarN301DriverNodelet();
 
 private:
 
-  virtual void onInit(void);
-  virtual void devicePoll(void);
+    virtual void onInit(void);
+    virtual void devicePoll(void);
 
-  volatile bool running;               ///< device thread is running
-  boost::shared_ptr<boost::thread> device_thread;
+    volatile bool running;               ///< device thread is running
+    boost::shared_ptr<boost::thread> device_thread;
 
-  LslidarN301DriverPtr lslidar_n301_driver; ///< driver implementation class
+    LslidarN301DriverPtr lslidar_n301_driver; ///< driver implementation class
 };
 
 } // namespace lslidar_driver

@@ -39,39 +39,39 @@ static uint16_t PACKET_SIZE = 1206;
 class LslidarN301Driver {
 public:
 
-  LslidarN301Driver(ros::NodeHandle& n, ros::NodeHandle& pn);
-  ~LslidarN301Driver();
+    LslidarN301Driver(ros::NodeHandle& n, ros::NodeHandle& pn);
+    ~LslidarN301Driver();
 
-  bool initialize();
-  bool polling();
+    bool initialize();
+    bool polling();
 
-  typedef boost::shared_ptr<LslidarN301Driver> LslidarN301DriverPtr;
-  typedef boost::shared_ptr<const LslidarN301Driver> LslidarN301DriverConstPtr;
+    typedef boost::shared_ptr<LslidarN301Driver> LslidarN301DriverPtr;
+    typedef boost::shared_ptr<const LslidarN301Driver> LslidarN301DriverConstPtr;
 
 private:
 
-  bool loadParameters();
-  bool createRosIO();
-  bool openUDPPort();
-  int getPacket(lslidar_n301_msgs::LslidarN301PacketPtr& msg);
+    bool loadParameters();
+    bool createRosIO();
+    bool openUDPPort();
+    int getPacket(lslidar_n301_msgs::LslidarN301PacketPtr& msg);
 
-  // Ethernet relate variables
-  std::string device_ip_string;
-  in_addr device_ip;
-  int socket_id;
+    // Ethernet relate variables
+    std::string device_ip_string;
+    in_addr device_ip;
+    int socket_id;
 
-  // ROS related variables
-  ros::NodeHandle nh;
-  ros::NodeHandle pnh;
+    // ROS related variables
+    ros::NodeHandle nh;
+    ros::NodeHandle pnh;
 
-  std::string frame_id;
-  ros::Publisher packet_pub;
+    std::string frame_id;
+    ros::Publisher packet_pub;
 
-  // Diagnostics updater
-  diagnostic_updater::Updater diagnostics;
-  boost::shared_ptr<diagnostic_updater::TopicDiagnostic> diag_topic;
-  double diag_min_freq;
-  double diag_max_freq;
+    // Diagnostics updater
+    diagnostic_updater::Updater diagnostics;
+    boost::shared_ptr<diagnostic_updater::TopicDiagnostic> diag_topic;
+    double diag_min_freq;
+    double diag_max_freq;
 };
 
 typedef LslidarN301Driver::LslidarN301DriverPtr LslidarN301DriverPtr;

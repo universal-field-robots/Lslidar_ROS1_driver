@@ -47,14 +47,14 @@ static const int SIZE_BLOCK      = 100;
 static const int RAW_SCAN_SIZE   = 3;
 static const int SCANS_PER_BLOCK = 32;
 static const int BLOCK_DATA_SIZE =
-  (SCANS_PER_BLOCK * RAW_SCAN_SIZE);
+        (SCANS_PER_BLOCK * RAW_SCAN_SIZE);
 
 // According to Bruce Hall DISTANCE_MAX is 65.0, but we noticed
 // valid packets with readings up to 130.0.
 static const double DISTANCE_MAX        = 130.0;        /**< meters */
 static const double DISTANCE_RESOLUTION = 0.002; /**< meters */
 static const double DISTANCE_MAX_UNITS  =
-  (DISTANCE_MAX / DISTANCE_RESOLUTION + 1.0);
+        (DISTANCE_MAX / DISTANCE_RESOLUTION + 1.0);
 
 /** @todo make this work for both big and little-endian machines */
 static const uint16_t UPPER_BANK = 0xeeff;
@@ -71,148 +71,148 @@ static const int PACKET_SIZE        = 1206;
 static const int BLOCKS_PER_PACKET  = 12;
 static const int PACKET_STATUS_SIZE = 4;
 static const int SCANS_PER_PACKET =
-  (SCANS_PER_BLOCK * BLOCKS_PER_PACKET);
+        (SCANS_PER_BLOCK * BLOCKS_PER_PACKET);
 static const int FIRINGS_PER_PACKET =
-  FIRINGS_PER_BLOCK * BLOCKS_PER_PACKET;
+        FIRINGS_PER_BLOCK * BLOCKS_PER_PACKET;
 
 // Pre-compute the sine and cosine for the altitude angles.
 static const double scan_altitude[16] = {
-  -0.2617993877991494,   0.017453292519943295,
-  -0.22689280275926285,  0.05235987755982989,
-  -0.19198621771937624,  0.08726646259971647,
-  -0.15707963267948966,  0.12217304763960307,
-  -0.12217304763960307,  0.15707963267948966,
-  -0.08726646259971647,  0.19198621771937624,
-  -0.05235987755982989,  0.22689280275926285,
-  -0.017453292519943295, 0.2617993877991494
+    -0.2617993877991494,   0.017453292519943295,
+    -0.22689280275926285,  0.05235987755982989,
+    -0.19198621771937624,  0.08726646259971647,
+    -0.15707963267948966,  0.12217304763960307,
+    -0.12217304763960307,  0.15707963267948966,
+    -0.08726646259971647,  0.19198621771937624,
+    -0.05235987755982989,  0.22689280275926285,
+    -0.017453292519943295, 0.2617993877991494
 };
 
 static const double cos_scan_altitude[16] = {
-  std::cos(scan_altitude[ 0]), std::cos(scan_altitude[ 1]),
-  std::cos(scan_altitude[ 2]), std::cos(scan_altitude[ 3]),
-  std::cos(scan_altitude[ 4]), std::cos(scan_altitude[ 5]),
-  std::cos(scan_altitude[ 6]), std::cos(scan_altitude[ 7]),
-  std::cos(scan_altitude[ 8]), std::cos(scan_altitude[ 9]),
-  std::cos(scan_altitude[10]), std::cos(scan_altitude[11]),
-  std::cos(scan_altitude[12]), std::cos(scan_altitude[13]),
-  std::cos(scan_altitude[14]), std::cos(scan_altitude[15]),
+    std::cos(scan_altitude[ 0]), std::cos(scan_altitude[ 1]),
+    std::cos(scan_altitude[ 2]), std::cos(scan_altitude[ 3]),
+    std::cos(scan_altitude[ 4]), std::cos(scan_altitude[ 5]),
+    std::cos(scan_altitude[ 6]), std::cos(scan_altitude[ 7]),
+    std::cos(scan_altitude[ 8]), std::cos(scan_altitude[ 9]),
+    std::cos(scan_altitude[10]), std::cos(scan_altitude[11]),
+    std::cos(scan_altitude[12]), std::cos(scan_altitude[13]),
+    std::cos(scan_altitude[14]), std::cos(scan_altitude[15]),
 };
 
 static const double sin_scan_altitude[16] = {
-  std::sin(scan_altitude[ 0]), std::sin(scan_altitude[ 1]),
-  std::sin(scan_altitude[ 2]), std::sin(scan_altitude[ 3]),
-  std::sin(scan_altitude[ 4]), std::sin(scan_altitude[ 5]),
-  std::sin(scan_altitude[ 6]), std::sin(scan_altitude[ 7]),
-  std::sin(scan_altitude[ 8]), std::sin(scan_altitude[ 9]),
-  std::sin(scan_altitude[10]), std::sin(scan_altitude[11]),
-  std::sin(scan_altitude[12]), std::sin(scan_altitude[13]),
-  std::sin(scan_altitude[14]), std::sin(scan_altitude[15]),
+    std::sin(scan_altitude[ 0]), std::sin(scan_altitude[ 1]),
+    std::sin(scan_altitude[ 2]), std::sin(scan_altitude[ 3]),
+    std::sin(scan_altitude[ 4]), std::sin(scan_altitude[ 5]),
+    std::sin(scan_altitude[ 6]), std::sin(scan_altitude[ 7]),
+    std::sin(scan_altitude[ 8]), std::sin(scan_altitude[ 9]),
+    std::sin(scan_altitude[10]), std::sin(scan_altitude[11]),
+    std::sin(scan_altitude[12]), std::sin(scan_altitude[13]),
+    std::sin(scan_altitude[14]), std::sin(scan_altitude[15]),
 };
 
 typedef struct{
-  double distance;
-  double intensity;
+    double distance;
+    double intensity;
 }point_struct;
 class LslidarN301Decoder {
 public:
 
-  LslidarN301Decoder(ros::NodeHandle& n, ros::NodeHandle& pn);
-  LslidarN301Decoder(const LslidarN301Decoder&) = delete;
-  LslidarN301Decoder operator=(const LslidarN301Decoder&) = delete;
-  ~LslidarN301Decoder() {return;}
+    LslidarN301Decoder(ros::NodeHandle& n, ros::NodeHandle& pn);
+    LslidarN301Decoder(const LslidarN301Decoder&) = delete;
+    LslidarN301Decoder operator=(const LslidarN301Decoder&) = delete;
+    ~LslidarN301Decoder() {return;}
 
-  bool initialize();
+    bool initialize();
 
-  typedef boost::shared_ptr<LslidarN301Decoder> LslidarN301DecoderPtr;
-  typedef boost::shared_ptr<const LslidarN301Decoder> LslidarN301DecoderConstPtr;
+    typedef boost::shared_ptr<LslidarN301Decoder> LslidarN301DecoderPtr;
+    typedef boost::shared_ptr<const LslidarN301Decoder> LslidarN301DecoderConstPtr;
 
 private:
 
-  union TwoBytes {
-    uint16_t distance;
-    uint8_t  bytes[2];
-  };
+    union TwoBytes {
+        uint16_t distance;
+        uint8_t  bytes[2];
+    };
 
-  struct RawBlock {
-    uint16_t header;        ///< UPPER_BANK or LOWER_BANK
-    uint16_t rotation;      ///< 0-35999, divide by 100 to get degrees
-    uint8_t  data[BLOCK_DATA_SIZE];
-  };
+    struct RawBlock {
+        uint16_t header;        ///< UPPER_BANK or LOWER_BANK
+        uint16_t rotation;      ///< 0-35999, divide by 100 to get degrees
+        uint8_t  data[BLOCK_DATA_SIZE];
+    };
 
-  struct RawPacket {
-    RawBlock blocks[BLOCKS_PER_PACKET];
-    uint32_t time_stamp;
-    uint8_t factory[2];
-    //uint16_t revolution;
-    //uint8_t status[PACKET_STATUS_SIZE];
-  };
+    struct RawPacket {
+        RawBlock blocks[BLOCKS_PER_PACKET];
+        uint32_t time_stamp;
+        uint8_t factory[2];
+        //uint16_t revolution;
+        //uint8_t status[PACKET_STATUS_SIZE];
+    };
 
-  struct Firing {
-    // Azimuth associated with the first shot within this firing.
-    double firing_azimuth;
-    double azimuth[SCANS_PER_FIRING];
-    double distance[SCANS_PER_FIRING];
-    double intensity[SCANS_PER_FIRING];
-  };
+    struct Firing {
+        // Azimuth associated with the first shot within this firing.
+        double firing_azimuth;
+        double azimuth[SCANS_PER_FIRING];
+        double distance[SCANS_PER_FIRING];
+        double intensity[SCANS_PER_FIRING];
+    };
 
-  // Intialization sequence
-  bool loadParameters();
-  bool createRosIO();
+    // Intialization sequence
+    bool loadParameters();
+    bool createRosIO();
 
 
-  // Callback function for a single lslidar packet.
-  bool checkPacketValidity(const RawPacket* packet);
-  void decodePacket(const RawPacket* packet);
-  void packetCallback(const lslidar_n301_msgs::LslidarN301PacketConstPtr& msg);
+    // Callback function for a single lslidar packet.
+    bool checkPacketValidity(const RawPacket* packet);
+    void decodePacket(const RawPacket* packet);
+    void packetCallback(const lslidar_n301_msgs::LslidarN301PacketConstPtr& msg);
 
-  // Publish data
-  void publishPointCloud();
+    // Publish data
+    void publishPointCloud();
 
-  // Publish scan Data
-  void publishScan();
+    // Publish scan Data
+    void publishScan();
 
-  // Check if a point is in the required range.
-  bool isPointInRange(const double& distance) {
-    return (distance >= min_range && distance <= max_range);
-  }
+    // Check if a point is in the required range.
+    bool isPointInRange(const double& distance) {
+        return (distance >= min_range && distance <= max_range);
+    }
 
-  double rawAzimuthToDouble(const uint16_t& raw_azimuth) {
-    // According to the user manual,
-    // azimuth = raw_azimuth / 100.0;
-    return static_cast<double>(raw_azimuth) / 100.0 * DEG_TO_RAD;
-  }
-  // calc the means_point
-  point_struct getMeans(std::vector<point_struct> clusters);
+    double rawAzimuthToDouble(const uint16_t& raw_azimuth) {
+        // According to the user manual,
+        // azimuth = raw_azimuth / 100.0;
+        return static_cast<double>(raw_azimuth) / 100.0 * DEG_TO_RAD;
+    }
+    // calc the means_point
+    point_struct getMeans(std::vector<point_struct> clusters);
 
-  // Configuration parameters
-  double min_range;
-  double max_range;
-  double frequency;
-  bool publish_point_cloud;
+    // Configuration parameters
+    double min_range;
+    double max_range;
+    double frequency;
+    bool publish_point_cloud;
 
-  double cos_azimuth_table[6300];
-  double sin_azimuth_table[6300];
+    double cos_azimuth_table[6300];
+    double sin_azimuth_table[6300];
 
-  bool is_first_sweep;
-  double last_azimuth;
-  double sweep_start_time;
-  double packet_start_time;
-  Firing firings[FIRINGS_PER_PACKET];
+    bool is_first_sweep;
+    double last_azimuth;
+    double sweep_start_time;
+    double packet_start_time;
+    Firing firings[FIRINGS_PER_PACKET];
 
-  // ROS related parameters
-  ros::NodeHandle nh;
-  ros::NodeHandle pnh;
+    // ROS related parameters
+    ros::NodeHandle nh;
+    ros::NodeHandle pnh;
 
-  std::string fixed_frame_id;
-  std::string child_frame_id;
+    std::string fixed_frame_id;
+    std::string child_frame_id;
 
-  lslidar_n301_msgs::LslidarN301SweepPtr sweep_data;
-  sensor_msgs::PointCloud2 point_cloud_data;
+    lslidar_n301_msgs::LslidarN301SweepPtr sweep_data;
+    sensor_msgs::PointCloud2 point_cloud_data;
 
-  ros::Subscriber packet_sub;
-  ros::Publisher sweep_pub;
-  ros::Publisher point_cloud_pub;
-  ros::Publisher scan_pub;
+    ros::Subscriber packet_sub;
+    ros::Publisher sweep_pub;
+    ros::Publisher point_cloud_pub;
+    ros::Publisher scan_pub;
 
 };
 

@@ -28,13 +28,13 @@ namespace lslidar_n301_decoder {
 class LslidarN301DecoderNodelet: public nodelet::Nodelet {
 public:
 
-  LslidarN301DecoderNodelet() {}
-  ~LslidarN301DecoderNodelet() {}
+    LslidarN301DecoderNodelet() {}
+    ~LslidarN301DecoderNodelet() {}
 
 private:
 
-  virtual void onInit();
-  LslidarN301DecoderPtr decoder;
+    virtual void onInit();
+    LslidarN301DecoderPtr decoder;
 };
 
 } // end namespace lslidar_n301_decoder

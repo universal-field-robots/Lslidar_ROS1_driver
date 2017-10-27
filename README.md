@@ -63,7 +63,7 @@ This is only published when the `publish_point_cloud` is set to `true` in the la
 **Node**
 
 ```
-roslauch lslidar_n301_decoder lslidar_n301_decoder_nodelet.launch
+roslaunch lslidar_n301_decoder lslidar_n301_decoder_nodelet.launch
 ```
 
 Note that this launch file launches both the driver and the decoder, which is the only launch file needed to be used.
