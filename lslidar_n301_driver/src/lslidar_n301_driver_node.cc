@@ -26,7 +26,10 @@ int main(int argc, char** argv)
 
     // start the driver
     lslidar_n301_driver::LslidarN301Driver driver(node, private_nh);
-
+  if (!driver.initialize()) {
+    ROS_ERROR("Cannot initialize lslidar driver...");
+    return 0;
+  }
     // loop until shut down or end of file
     while(ros::ok() && driver.polling()) {
         ros::spinOnce();

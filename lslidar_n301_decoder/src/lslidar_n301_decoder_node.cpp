@@ -16,7 +16,7 @@
  */
 
 #include <ros/ros.h>
-#include <google/profiler.h>
+
 #include <lslidar_n301_decoder/lslidar_n301_decoder.h>
 
 int main(int argc, char** argv) {
@@ -32,9 +32,7 @@ int main(int argc, char** argv) {
         return -1;
     }
 
-    ProfilerStart("lslidar_decoder.prof");
-    ros::spin();
-    ProfilerStop();
+  ros::spin();
 
     return 0;
 }

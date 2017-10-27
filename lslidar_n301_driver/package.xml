@@ -21,8 +21,5 @@
   <run_depend>roscpp</run_depend>
   <run_depend>lslidar_n301_msgs</run_depend>
 
-  <export>
-    <nodelet plugin="${prefix}/nodelet_lslidar_n301.xml"/>
-  </export>
 
 </package>

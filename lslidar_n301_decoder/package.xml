@@ -12,7 +12,6 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
-  <depend>nodelet</depend>
   <depend>pluginlib</depend>
   <depend>roscpp</depend>
   <depend>sensor_msgs</depend>
@@ -23,9 +22,5 @@
   <depend>libpcl-all</depend>
 
   <depend>lslidar_n301_msgs</depend>
-
-  <export>
-    <nodelet plugin="${prefix}/nodelet_lslidar_n301_decoder.xml"/>
-  </export>
 
 </package>

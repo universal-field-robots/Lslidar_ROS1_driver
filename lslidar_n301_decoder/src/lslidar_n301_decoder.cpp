@@ -36,6 +36,8 @@ LslidarN301Decoder::LslidarN301Decoder(
 bool LslidarN301Decoder::loadParameters() {
     pnh.param<double>("min_range", min_range, 0.5);
     pnh.param<double>("max_range", max_range, 100.0);
+  pnh.param<double>("angle_disable_min", angle_disable_min,-1);
+  pnh.param<double>("angle_disable_max", angle_disable_max, -1);
     pnh.param<double>("frequency", frequency, 20.0);
     pnh.param<bool>("publish_point_cloud", publish_point_cloud, true);
 
@@ -86,7 +88,7 @@ bool LslidarN301Decoder::initialize() {
 bool LslidarN301Decoder::checkPacketValidity(const RawPacket* packet) {
     for (size_t blk_idx = 0; blk_idx < BLOCKS_PER_PACKET; ++blk_idx) {
         if (packet->blocks[blk_idx].header != UPPER_BANK) {
-            ROS_WARN("Skip invalid VLP-16 packet: block %lu header is %x",
+      ROS_WARN("Skip invalid LS-16 packet: block %lu header is %x",
                      blk_idx, packet->blocks[blk_idx].header);
             return false;
         }

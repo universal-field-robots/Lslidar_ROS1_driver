@@ -41,7 +41,8 @@
 
 
 namespace lslidar_n301_decoder {
-
+double angle_disable_min = 0;
+double angle_disable_max = 360;
 // Raw lslidar packet constants and structures.
 static const int SIZE_BLOCK      = 100;
 static const int RAW_SCAN_SIZE   = 3;

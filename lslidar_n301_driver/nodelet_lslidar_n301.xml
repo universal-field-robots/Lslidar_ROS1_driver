@@ -1,9 +1,0 @@
-<library path="lib/liblslidar_n301_driver_nodelet">
-  <class name="lslidar_n301_driver/LslidarN301DriverNodelet"
-         type="lslidar_n301_driver::LslidarN301DriverNodelet"
-         base_class_type="nodelet::Nodelet">
-    <description>
-      Publish one lslidar raw data packet each time.
-    </description>
-  </class>
-</library>

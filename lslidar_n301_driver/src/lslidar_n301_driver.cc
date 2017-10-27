@@ -47,25 +47,25 @@ LslidarN301Driver::~LslidarN301Driver() {
 
 bool LslidarN301Driver::loadParameters() {
 
-    pnh.param("frame_id", frame_id, std::string("lslidar"));
-    pnh.param("device_ip", device_ip_string, std::string("192.168.1.201"));
-    inet_aton(device_ip_string.c_str(), &device_ip);
-
-    return true;
+  pnh.param("frame_id", frame_id, std::string("lslidar"));
+  pnh.param("device_ip", device_ip_string, std::string("192.168.1.222"));
+  inet_aton(device_ip_string.c_str(), &device_ip);
+  ROS_INFO_STREAM("Opening UDP socket: address " << device_ip_string);
+  return true;
 }
 
 bool LslidarN301Driver::createRosIO() {
 
-    // ROS diagnostics
-    diagnostics.setHardwareID("Lslidar_N301");
-    // VLP16 publishs 0.3 million points per second.
-    // Each packet contains 12 blocks. And each block
-    // contains 32 points. Together provides the
-    // packet rate.
-    const double diag_freq = 300000.0 / (12*32);
-    diag_max_freq = diag_freq;
-    diag_min_freq = diag_freq;
-    ROS_INFO("expected frequency: %.3f (Hz)", diag_freq);
+  // ROS diagnostics
+  diagnostics.setHardwareID("Lslidar_N301");
+  // n301 publishs 20*16 thousands points per second.
+  // Each packet contains 12 blocks. And each block
+  // contains 32 points. Together provides the
+  // packet rate.
+  const double diag_freq = 16*20000.0 / (12*32);
+  diag_max_freq = diag_freq;
+  diag_min_freq = diag_freq;
+  ROS_INFO("expected frequency: %.3f (Hz)", diag_freq);
 
     using namespace diagnostic_updater;
     diag_topic.reset(new TopicDiagnostic(
@@ -91,6 +91,7 @@ bool LslidarN301Driver::openUDPPort() {
     memset(&my_addr, 0, sizeof(my_addr));    // initialize to zeros
     my_addr.sin_family = AF_INET;            // host byte order
     my_addr.sin_port = htons(UDP_PORT_NUMBER);      // short, in network byte order
+  ROS_INFO_STREAM("Opening UDP socket: port " << UDP_PORT_NUMBER);
     my_addr.sin_addr.s_addr = INADDR_ANY;    // automatically fill in my IP
 
     if (bind(socket_id, (sockaddr *)&my_addr, sizeof(sockaddr)) == -1) {
@@ -121,7 +122,7 @@ bool LslidarN301Driver::initialize() {
         ROS_ERROR("Cannot open UDP port...");
         return false;
     }
-
+    ROS_INFO("Initialised lslidar n301 without error");
     return true;
 }
 
@@ -133,7 +134,7 @@ int LslidarN301Driver::getPacket(
     struct pollfd fds[1];
     fds[0].fd = socket_id;
     fds[0].events = POLLIN;
-    static const int POLL_TIMEOUT = 1000; // one second (in msec)
+  static const int POLL_TIMEOUT = 2000; // one second (in msec)
 
     sockaddr_in sender_address;
     socklen_t sender_address_len = sizeof(sender_address);
