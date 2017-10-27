@@ -141,9 +141,10 @@ void LslidarN301Decoder::publishScan()
 
     scan->header.frame_id = child_frame_id;
     scan->header.stamp = sweep_data->header.stamp;
-    scan->angle_max = 0.0;
-    scan->angle_min = 2.0*M_PI;
-    scan->angle_increment = (scan->angle_max-scan->angle_min)/3600;
+
+    scan->angle_min = 0.0;
+    scan->angle_max = 2.0*M_PI;
+    scan->angle_increment = (scan->angle_max - scan->angle_min)/3600;
 
     //	scan->time_increment = motor_speed_/1e8;
     scan->range_min = min_range;
@@ -156,27 +157,18 @@ void LslidarN301Decoder::publishScan()
     for(uint16_t i = 0; i < sweep_data->scans[0].points.size(); i++)
     {
         int degree = round(sweep_data->scans[0].points[i].azimuth * RAD_TO_DEG * 10);
-        //    ROS_INFO("degree = %d", degree);
+//            ROS_INFO("degree = %d", degree);
         if (degree >= 3600) degree = 0;
         if (degree < 0) degree = 3599;
         temp_point.distance = sweep_data->scans[0].points[i].distance;
         temp_point.intensity = sweep_data->scans[0].points[i].intensity;
-        mean_points[degree].push_back(temp_point);
+        mean_points[3599-degree].push_back(temp_point);
     }
 
     // calc mean
-
-
     point_struct mean_point;
     for(uint16_t i = 0; i < 3600; i++)
     {
-        //    ROS_INFO("%f", sweep_data->scans[0].points[i].azimuth);
-        if ( mean_points[i].size() == 0)
-        {
-            scan->ranges.push_back(0);
-            scan->intensities.push_back(0);
-            continue;
-        }
         mean_point = getMeans(mean_points[i]);
         scan->ranges.push_back(mean_point.distance);
         scan->intensities.push_back(mean_point.intensity);
@@ -188,18 +180,27 @@ void LslidarN301Decoder::publishScan()
 
 point_struct LslidarN301Decoder::getMeans(std::vector<point_struct> clusters)
 {
-    int num = clusters.size();
-
-    double mean_distance = 0, mean_intensity = 0;
     point_struct tmp;
-    for (int i = 0; i < num; i++)
+    int num = clusters.size();
+    if (num == 0)
     {
-        mean_distance += clusters[i].distance;
-        mean_intensity += clusters[i].intensity;
-    }
-    tmp.distance = mean_distance / num;
-    tmp.intensity = mean_intensity / num;
+        tmp.distance = std::numeric_limits<float>::infinity();
+        tmp.intensity = std::numeric_limits<float>::infinity();
 
+    }
+    else
+    {
+        double mean_distance = 0, mean_intensity = 0;
+
+        for (int i = 0; i < num; i++)
+        {
+            mean_distance += clusters[i].distance;
+            mean_intensity += clusters[i].intensity;
+        }
+
+        tmp.distance = mean_distance / num;
+        tmp.intensity = mean_intensity / num;
+    }
     return tmp;
 }
 void LslidarN301Decoder::decodePacket(const RawPacket* packet) {
