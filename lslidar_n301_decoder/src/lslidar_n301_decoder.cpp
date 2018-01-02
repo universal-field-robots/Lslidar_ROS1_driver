@@ -34,15 +34,19 @@ LslidarN301Decoder::LslidarN301Decoder(
 }
 
 bool LslidarN301Decoder::loadParameters() {
+    pnh.param<int>("point_num", point_num, 1000);
     pnh.param<double>("min_range", min_range, 0.5);
     pnh.param<double>("max_range", max_range, 100.0);
     pnh.param<double>("angle_disable_min", angle_disable_min,-1);
     pnh.param<double>("angle_disable_max", angle_disable_max, -1);
+
     pnh.param<double>("frequency", frequency, 20.0);
     pnh.param<bool>("publish_point_cloud", publish_point_cloud, true);
 
     pnh.param<string>("fixed_frame_id", fixed_frame_id, "map");
     pnh.param<string>("child_frame_id", child_frame_id, "lslidar");
+
+    angle_base = M_PI*2 / point_num;
     return true;
 }
 
@@ -146,34 +150,28 @@ void LslidarN301Decoder::publishScan()
 
     scan->angle_min = 0.0;
     scan->angle_max = 2.0*M_PI;
-    scan->angle_increment = (scan->angle_max - scan->angle_min)/3600;
+    scan->angle_increment = (scan->angle_max - scan->angle_min)/point_num;
 
     //	scan->time_increment = motor_speed_/1e8;
     scan->range_min = min_range;
     scan->range_max = max_range;
-    scan->ranges.reserve(3600);
-    scan->intensities.reserve(3600);
+    scan->ranges.reserve(point_num);
+    scan->ranges.assign(point_num, std::numeric_limits<float>::infinity());
 
-    std::vector<point_struct> mean_points[3600] = {};
-    point_struct temp_point;
+    scan->intensities.reserve(point_num);
+    scan->intensities.assign(point_num, std::numeric_limits<float>::infinity());
+
     for(uint16_t i = 0; i < sweep_data->scans[0].points.size(); i++)
     {
-        int degree = round(sweep_data->scans[0].points[i].azimuth * RAD_TO_DEG * 10);
-        //            ROS_INFO("degree = %d", degree);
-        if (degree >= 3600) degree = 0;
-        if (degree < 0) degree = 3599;
-        temp_point.distance = sweep_data->scans[0].points[i].distance;
-        temp_point.intensity = sweep_data->scans[0].points[i].intensity;
-        mean_points[3599-degree].push_back(temp_point);
-    }
+        int point_idx = sweep_data->scans[0].points[i].azimuth / angle_base;
 
-    // calc mean
-    point_struct mean_point;
-    for(uint16_t i = 0; i < 3600; i++)
-    {
-        mean_point = getMeans(mean_points[i]);
-        scan->ranges.push_back(mean_point.distance);
-        scan->intensities.push_back(mean_point.intensity);
+        if (point_idx >= point_num)
+            point_idx = 0;
+        if (point_idx < 0)
+            point_idx = point_num - 1;
+
+        scan->ranges[point_idx] = sweep_data->scans[0].points[i].distance;
+        scan->intensities[point_idx] = sweep_data->scans[0].points[i].intensity;
     }
 
     scan_pub.publish(scan);
@@ -205,6 +203,7 @@ point_struct LslidarN301Decoder::getMeans(std::vector<point_struct> clusters)
     }
     return tmp;
 }
+
 void LslidarN301Decoder::decodePacket(const RawPacket* packet) {
 
     // Compute the azimuth angle for each firing.

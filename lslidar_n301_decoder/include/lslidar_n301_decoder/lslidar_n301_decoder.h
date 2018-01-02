@@ -41,8 +41,7 @@
 
 
 namespace lslidar_n301_decoder {
-double angle_disable_min = 0;
-double angle_disable_max = 360;
+
 // Raw lslidar packet constants and structures.
 static const int SIZE_BLOCK      = 100;
 static const int RAW_SCAN_SIZE   = 3;
@@ -114,6 +113,7 @@ typedef struct{
     double distance;
     double intensity;
 }point_struct;
+
 class LslidarN301Decoder {
 public:
 
@@ -182,12 +182,19 @@ private:
         // azimuth = raw_azimuth / 100.0;
         return static_cast<double>(raw_azimuth) / 100.0 * DEG_TO_RAD;
     }
+
     // calc the means_point
     point_struct getMeans(std::vector<point_struct> clusters);
+
+    // configuration degree base
+    int point_num;
+    double angle_base;
 
     // Configuration parameters
     double min_range;
     double max_range;
+    double angle_disable_min;
+    double angle_disable_max;
     double frequency;
     bool publish_point_cloud;
 
