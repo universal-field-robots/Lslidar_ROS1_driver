@@ -74,4 +74,12 @@ Note that this launch file launches both the driver and the decoder, which is th
 
 ## Bug Report
 
-Prefer to open an issue. You can also send an E-mail to shaohuashu@lslidar.com.
+Prefer to open an issue. You can also send an E-mail to shaohuashu@lslidar.com
+
+
+
+
+RERTION 
+V0.1 2000 points per circle
+v0.2 1000 points per circle
+
