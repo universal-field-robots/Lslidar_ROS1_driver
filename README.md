@@ -1,34 +1,13 @@
-# lslidar_c16
+# lslidar_ch
+#version v3.0.4_210422
 
 ## version track
-Author: Yutong
-
-### ver1.2 Yutong
-1. Add group multicast function
-2. Add truncate 3D angle area data
-
-
-### ver1.1  Yutong
-Using new message type to distinguish different channel data
-topic name: scan_channel
-topic type: LslidarC16Layer
-details: LslidarC16Layer is consist of 16 sets data for different channel, each set of data is represented by Sensor_msgs/LaserScan rosmessage type
-Usage: rostopic echo /scan_channel  will output all 16 channels data
-       rostopic echo /scan_channel/scan_channel[*]  (* can be from 0 to 15 represents channel num)  --> output data will be sensor_msgs/LaserScan message type
-Example: There is an example script to show you how to obtain each channel data, located at /lslidar_c16_decoder/scripts/Test_MultiChannel.py
-	 You will need python package numpy and matplotlib.pyplot(optional) to fully run this script
-
-
-### ver1.05 Yutong
-Using rostopic to select the channel you wish to output
-topic name: layer_num
-topic type: std_msgs/Int8
-details: send layer number to topic layer_num 
-Usage: rostopic pub /layer_num std_msgs/Int8 "data: 5"  --> output channel 5 data to topic /scan, message type is sensor_msgs/LaserScan . data number can only from 0 to 15
+Author: leo
+### ver2.0.3 leo
 
 ## Description
-The `lslidar_c16` package is a linux ROS driver for lslidar c16.
-The package is tested on Ubuntu 14.04 with ROS indigo.
+The `lslidar_ch` package is a linux ROS driver for lslidar ch.
+The package is tested on Ubuntu 16.04 with ROS kinetic.
 
 ## Compling
 This is a Catkin package. Make sure the package is on `ROS_PACKAGE_PATH` after cloning the package to your workspace. And the normal procedure for compling a catkin package will work.
@@ -40,31 +19,31 @@ catkin_make
 
 ## Example Usage
 
-### lslidar_c16_decoder
+### lslidar_ch_decoder
 
 **Parameters**
 
-`device_ip` (`string`, `default: 192.168.1.200`)
+`lidar_ip` (`string`, `default: 192.168.1.200`)
 
 By default, the IP address of the device is 192.168.1.200.
 
-`frame_id` (`string`, `default: laser`)
+`frame_id` (`string`, `default: laser_link`)
 
 The frame ID entry for the sent messages.
 
 **Published Topics**
 
-`lslidar_packets` (`lslidar_c16_msgs/LslidarC16Packet`)
+`lslidar_point_cloud`
 
 Each message corresponds to a lslidar packet sent by the device through the Ethernet.
 
-### lslidar_c16_decoder
+### lslidar_ch_decoder
 
 **Parameters**
 
-`min_range` (`double`, `0.15`)
+`min_range` (`double`, `0.3`)
 
-`max_range` (`double`, `150.0`)
+`max_range` (`double`, `200.0`)
 
 Points outside this range will be removed.
 
@@ -78,7 +57,7 @@ If set to true, the decoder will additionally send out a local point cloud consi
 
 **Published Topics**
 
-`lslidar_sweep` (`lslidar_c16_msgs/LslidarC16Sweep`)
+`lslidar_sweep` (`lslidar_ch_msgs/LslidarChSweep`)
 
 The message arranges the points within each sweep based on its scan index and azimuth.
 
@@ -89,7 +68,7 @@ This is only published when the `publish_point_cloud` is set to `true` in the la
 **Node**
 
 ```
-roslaunch lslidar_c16_decoder lslidar_c16.launch --screen
+roslaunch lslidar_ch_decoder lslidar_ch.launch --screen
 ```
 
 Note that this launch file launches both the driver and the decoder, which is the only launch file needed to be used.
@@ -101,8 +80,55 @@ Note that this launch file launches both the driver and the decoder, which is th
 ## Bug Report
 
 
+##Version changes
+/***********2019-11-27****************/
+Original version : lslidar_ch32_v2.01_190910
+Revised version  : lslidar_ch32_v2.02_191127
+Modify  		 : Add lines for lslidar_point_cloud topic publishing
+Date			 : 2019-11-27 
+
+
+/***********2019-12-20****************/
+Original version : lslidar_ch32_v2.02_191127
+Revised version  : lslidar_ch32_v2.03_191220
+Modify  		 : lslidar_ch_four.launch launch file was added to realize the simultaneous startup of four radars
+				   The port number and IP address of four radars must be different
+Date			 : 2019-12-20
+
+
+/***********2019-12-28****************/
+Original version : lslidar_ch32_v2.03_191220
+Revised version  : lslidar_ch32_v3.01_200228
+Modify  		 : According to the new protocol V3.0 (adding smooth filtering), it must be used together with the new protocol V3.0 radar
+Date			 : 2020-02-28
+
+
+/***********2020-04-22****************/
+Original version : lslidar_ch32_v3.01_200228
+Revised version  : lslidar_ch32_v3.02_200422
+Modify  		 : 增加设备包解析线程，增加发布每个点对应的时间戳
+Date			 : 2020-04-22
+
+/***********2020-07-20************/
+Original version : lslidar_ch32_v3.0.2_200422
+Original version : lslidar_ch32_v3.0.3_200720
+Modify  		 :  增加了通道选择内容。					
+
+​	luanch文件说明: 
+
+    <param name="channel_num" value="16"/> //通道选择0-31
+    <param name="publish_point_cloud" value="true"/> //是否发布所有通道点云
+    <param name="publish_channel" value="false"/> //是否发布单通道点云 ，若选择发布则置为true。
+
+查看单通道点云rviz设置：rviz的pointcloud2 的topic 选择/scan_channel。
+
+Date			 : 2020-07-20
 
 
 
+/***********2021-04-22************/
+Original version : lslidar_ch32_v3.0.3_200720
+Original version : LSLIDAR_CH32_V3.0.4_210422_ROS
+Modify  		 :  新增了不接gps情况下点云中的点没有时间问题。					
 
-
+Date			 : 2021-04-22
