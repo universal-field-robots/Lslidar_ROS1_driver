@@ -1,34 +1,13 @@
-# lslidar_c16
+# lslidar_ch
+#version v1.0.0_200825
 
 ## version track
-Author: Yutong
-
-### ver1.2 Yutong
-1. Add group multicast function
-2. Add truncate 3D angle area data
-
-
-### ver1.1  Yutong
-Using new message type to distinguish different channel data
-topic name: scan_channel
-topic type: LslidarC16Layer
-details: LslidarC16Layer is consist of 16 sets data for different channel, each set of data is represented by Sensor_msgs/LaserScan rosmessage type
-Usage: rostopic echo /scan_channel  will output all 16 channels data
-       rostopic echo /scan_channel/scan_channel[*]  (* can be from 0 to 15 represents channel num)  --> output data will be sensor_msgs/LaserScan message type
-Example: There is an example script to show you how to obtain each channel data, located at /lslidar_c16_decoder/scripts/Test_MultiChannel.py
-	 You will need python package numpy and matplotlib.pyplot(optional) to fully run this script
-
-
-### ver1.05 Yutong
-Using rostopic to select the channel you wish to output
-topic name: layer_num
-topic type: std_msgs/Int8
-details: send layer number to topic layer_num 
-Usage: rostopic pub /layer_num std_msgs/Int8 "data: 5"  --> output channel 5 data to topic /scan, message type is sensor_msgs/LaserScan . data number can only from 0 to 15
+Author: leo
+### ver2.0.3 leo
 
 ## Description
-The `lslidar_c16` package is a linux ROS driver for lslidar c16.
-The package is tested on Ubuntu 14.04 with ROS indigo.
+The `lslidar_ch` package is a linux ROS driver for lslidar ch.
+The package is tested on Ubuntu 16.04 with ROS kinetic.
 
 ## Compling
 This is a Catkin package. Make sure the package is on `ROS_PACKAGE_PATH` after cloning the package to your workspace. And the normal procedure for compling a catkin package will work.
@@ -40,31 +19,31 @@ catkin_make
 
 ## Example Usage
 
-### lslidar_c16_decoder
+### lslidar_ch_decoder
 
 **Parameters**
 
-`device_ip` (`string`, `default: 192.168.1.200`)
+`lidar_ip` (`string`, `default: 192.168.1.200`)
 
 By default, the IP address of the device is 192.168.1.200.
 
-`frame_id` (`string`, `default: laser`)
+`frame_id` (`string`, `default: laser_link`)
 
 The frame ID entry for the sent messages.
 
 **Published Topics**
 
-`lslidar_packets` (`lslidar_c16_msgs/LslidarC16Packet`)
+`lslidar_point_cloud`
 
 Each message corresponds to a lslidar packet sent by the device through the Ethernet.
 
-### lslidar_c16_decoder
+### lslidar_ch_decoder
 
 **Parameters**
 
-`min_range` (`double`, `0.15`)
+`min_range` (`double`, `0.3`)
 
-`max_range` (`double`, `150.0`)
+`max_range` (`double`, `200.0`)
 
 Points outside this range will be removed.
 
@@ -78,7 +57,7 @@ If set to true, the decoder will additionally send out a local point cloud consi
 
 **Published Topics**
 
-`lslidar_sweep` (`lslidar_c16_msgs/LslidarC16Sweep`)
+`lslidar_sweep` (`lslidar_ch_msgs/LslidarChSweep`)
 
 The message arranges the points within each sweep based on its scan index and azimuth.
 
@@ -89,7 +68,7 @@ This is only published when the `publish_point_cloud` is set to `true` in the la
 **Node**
 
 ```
-roslaunch lslidar_c16_decoder lslidar_c16.launch --screen
+roslaunch lslidar_ch_decoder lslidar_ch.launch --screen
 ```
 
 Note that this launch file launches both the driver and the decoder, which is the only launch file needed to be used.
@@ -100,9 +79,24 @@ Note that this launch file launches both the driver and the decoder, which is th
 
 ## Bug Report
 
+##Version changes
 
+/***********2020-08-25************/
+Original version : LSLIDAR_CH64_V1.0.0_200825_ROSK
+Modify  		 :  lslidar_ch64线ROS驱动kinetic版。					
 
+​	luanch文件说明: 
 
+    <param name="channel_num" value="16"/> //通道选择0-63
+    <param name="publish_point_cloud" value="true"/> //是否发布所有通道点云
+    <param name="publish_channel" value="false"/> //是否发布单通道点云 ，若选择发布则改为true。
 
+查看单通道点云rviz设置：rviz的pointcloud2 的topic 选择/scan_channel。
 
+```
+<param name="angle_disable_min" value="0"/>
+<param name="angle_disable_max" value="0"/>
+单通道点云角度裁剪范围。默认不裁剪。单位角度，30°-150°。
+```
 
+Date			 : 2020-08-25

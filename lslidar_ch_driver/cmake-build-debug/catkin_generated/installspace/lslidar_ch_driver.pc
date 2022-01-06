@@ -1,0 +1,8 @@
+prefix=/usr/local
+
+Name: lslidar_ch_driver
+Description: Description of lslidar_ch_driver
+Version: 1.0.0
+Cflags: -I${prefix}/include
+Libs: -L${prefix}/lib 
+Requires: roscpp diagnostic_updater nodelet lslidar_ch_msgs

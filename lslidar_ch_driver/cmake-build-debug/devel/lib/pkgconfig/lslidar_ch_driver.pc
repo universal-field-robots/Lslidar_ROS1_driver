@@ -1,0 +1,8 @@
+prefix=/home/ls-lqm/Desktop/ch64/src/lslidar_ch/lslidar_ch_driver/cmake-build-debug/devel
+
+Name: lslidar_ch_driver
+Description: Description of lslidar_ch_driver
+Version: 1.0.0
+Cflags: -I/home/ls-lqm/Desktop/ch64/src/lslidar_ch/lslidar_ch_driver/include
+Libs: -L${prefix}/lib 
+Requires: roscpp diagnostic_updater nodelet lslidar_ch_msgs
