@@ -6,6 +6,9 @@
   <maintainer email="tongsky723@sina.com">tongsky</maintainer>
   <author>Yutong</author>
   <license>BSD</license>
+  <description>
+    ROS device driver for Leishen C16 lidar.
+  </description>
 
   <buildtool_depend>catkin</buildtool_depend>
 

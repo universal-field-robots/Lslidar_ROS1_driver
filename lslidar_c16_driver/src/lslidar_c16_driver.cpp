@@ -12,48 +12,33 @@
  *
  *  ROS driver implementation for the RILIDAR 3D LIDARs
  */
-#include "rsdriver.h"
-#include <rslidar_msgs/rslidarScan.h>
+#include "lslidar_c16_driver/lslidar_c16_driver.h"
+#include <lslidar_c16_msgs/LslidarC16ScanUnified.h>
 
-namespace rslidar_driver
+namespace lslidar_c16_driver
 {
-  static const unsigned int POINTS_ONE_CHANNEL_PER_SECOND = 20000;
-  static const unsigned int BLOCKS_ONE_CHANNEL_PER_PKT = 12;
+static const unsigned int POINTS_ONE_CHANNEL_PER_SECOND = 20000;
+static const unsigned int BLOCKS_ONE_CHANNEL_PER_PKT = 12;
 
-rslidarDriver::rslidarDriver(ros::NodeHandle node, ros::NodeHandle private_nh)
+lslidarDriver::lslidarDriver(ros::NodeHandle node, ros::NodeHandle private_nh)
 {
-  skip_num_ = 0;
   // use private node handle to get parameters
-  private_nh.param("frame_id", config_.frame_id, std::string("rslidar"));
+  private_nh.param("frame_id", config_.frame_id, std::string("lslidar"));
 
   std::string tf_prefix = tf::getPrefixParam(private_nh);
   ROS_DEBUG_STREAM("tf_prefix: " << tf_prefix);
   config_.frame_id = tf::resolve(tf_prefix, config_.frame_id);
 
-  // get model name, validate string, determine packet rate
-  private_nh.param("model", config_.model, std::string("RS16"));
-  double packet_rate;  // packet frequency (Hz)
-  std::string model_full_name;
+  ROS_INFO_STREAM("tf_prefix: " << tf_prefix);
 
-  // product model
-  if (config_.model == "RS16")
-  {
-    packet_rate = 840;   //20000/24
-    model_full_name = "RS-LiDAR-16";
-  }
-  else if (config_.model == "RS32")
-  {
-    packet_rate = 1690;  //20000/12
-    model_full_name = "RS-LiDAR-32";
-  }
-  else
-  {
-    ROS_ERROR_STREAM("unknown LIDAR model: " << config_.model);
-    packet_rate = 2600.0;
-  }
-  std::string deviceName(std::string("Robosense ") + model_full_name);
+  // get model name, validate string, determine packet rate
+  private_nh.param("model", config_.model, std::string("LSC16"));
+  double packet_rate;  // packet frequency (Hz)
+
+  packet_rate = 840;   //20000/24
 
   private_nh.param("rpm", config_.rpm, 300.0);
+  private_nh.param("return_mode", config_.return_mode, 1);
   double frequency = (config_.rpm / 60.0);  // expected Hz rate
 
   // default number of packets for each scan is a single revolution
@@ -65,183 +50,200 @@ rslidarDriver::rslidarDriver(ros::NodeHandle node, ros::NodeHandle private_nh)
 
   std::string dump_file;
   private_nh.param("pcap", dump_file, std::string(""));
+  ROS_INFO_STREAM("pcap dump_file : " << dump_file);
 
   int msop_udp_port;
   private_nh.param("msop_port", msop_udp_port, (int)MSOP_DATA_PORT_NUMBER);
   int difop_udp_port;
   private_nh.param("difop_port", difop_udp_port, (int)DIFOP_DATA_PORT_NUMBER);
-
-  double cut_angle;
-  private_nh.param("cut_angle", cut_angle, -0.01);
-  if (cut_angle < 0.0)
-  {
-    ROS_INFO_STREAM("Cut at specific angle feature deactivated.");
-  }
-  else if (cut_angle < 360)
-  {
-    ROS_INFO_STREAM("Cut at specific angle feature activated. "
-                    "Cutting rslidar points always at "
-                    << cut_angle << " degree.");
-  }
-  else
-  {
-    ROS_ERROR_STREAM("cut_angle parameter is out of range. Allowed range is "
-                     << "between 0.0 and 360 negative values to deactivate this feature.");
-    cut_angle = -0.01;
-  }
-
-  // Convert cut_angle from radian to one-hundredth degree,
-  // which is used in rslidar packets
-  config_.cut_angle = static_cast<int>(cut_angle * 100);
-
-  // Initialize dynamic reconfigure
-  srv_ = boost::make_shared<dynamic_reconfigure::Server<rslidar_driver::rslidarNodeConfig> >(private_nh);
-  dynamic_reconfigure::Server<rslidar_driver::rslidarNodeConfig>::CallbackType f;
-  f = boost::bind(&rslidarDriver::callback, this, _1, _2);
-  srv_->setCallback(f);  // Set callback function und call initially
-
-  // initialize diagnostics
-  diagnostics_.setHardwareID(deviceName);
-  const double diag_freq = packet_rate / config_.npackets;
-  diag_max_freq_ = diag_freq;
-  diag_min_freq_ = diag_freq;
-  // ROS_INFO("expected frequency: %.3f (Hz)", diag_freq);
-
-  using namespace diagnostic_updater;
-  diag_topic_.reset(new TopicDiagnostic("rslidar_packets", diagnostics_,
-                                        FrequencyStatusParam(&diag_min_freq_, &diag_max_freq_, 0.1, 10),
-                                        TimeStampStatusParam()));
+  ROS_INFO_STREAM("mosop_port : " << msop_udp_port);
+  ROS_INFO_STREAM("difop_port : " << difop_udp_port);
 
   // open rslidar input device or file
   if (dump_file != "")  // have PCAP file?
   {
     // read data from packet capture file
-    msop_input_.reset(new rslidar_driver::InputPCAP(private_nh, msop_udp_port, packet_rate, dump_file));
-    difop_input_.reset(new rslidar_driver::InputPCAP(private_nh, difop_udp_port, packet_rate, dump_file));
+    msop_input_.reset(new lslidar_c16_driver::InputPCAP(private_nh, msop_udp_port, packet_rate, dump_file));
+    difop_input_.reset(new lslidar_c16_driver::InputPCAP(private_nh, difop_udp_port, packet_rate, dump_file));
+
   }
   else
   {
     // read data from live socket
-    msop_input_.reset(new rslidar_driver::InputSocket(private_nh, msop_udp_port));
-    difop_input_.reset(new rslidar_driver::InputSocket(private_nh, difop_udp_port));
+    msop_input_.reset(new lslidar_c16_driver::InputSocket(private_nh, msop_udp_port));
+    difop_input_.reset(new lslidar_c16_driver::InputSocket(private_nh, difop_udp_port));
+
   }
 
   // raw packet output topic
   std::string output_packets_topic;
-  private_nh.param("output_packets_topic", output_packets_topic, std::string("rslidar_packets"));
-  msop_output_ = node.advertise<rslidar_msgs::rslidarScan>(output_packets_topic, 10);
+  private_nh.param("output_packets_topic", output_packets_topic, std::string("lslidar_packet"));
+  msop_output_ = node.advertise<lslidar_c16_msgs::LslidarC16ScanUnified>(output_packets_topic, 10);
+  ROS_INFO_STREAM("output_packets_topic : " << output_packets_topic);
 
   std::string output_difop_topic;
-  private_nh.param("output_difop_topic", output_difop_topic, std::string("rslidar_packets_difop"));
-  difop_output_ = node.advertise<rslidar_msgs::rslidarPacket>(output_difop_topic, 10);
+  private_nh.param("output_difop_topic", output_difop_topic, std::string("lslidar_packet_difop"));
+  difop_output_ = node.advertise<lslidar_c16_msgs::LslidarC16Packet>(output_difop_topic, 10);
+  ROS_INFO_STREAM("output_difop_topic : " << output_difop_topic);
 
-  difop_thread_ = boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&rslidarDriver::difopPoll, this)));
+  difop_thread_ = boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&lslidarDriver::difopPoll, this)));
 
   private_nh.param("time_synchronization", time_synchronization_, false);
+  ROS_INFO_STREAM("time_synchronization_ : " << time_synchronization_);
 
   if (time_synchronization_)
   {
     output_sync_ = node.advertise<sensor_msgs::TimeReference>("sync_header", 1);
-    skip_num_sub_ = node.subscribe<std_msgs::Int32>("skippackets_num", 1, &rslidarDriver::skipNumCallback,
-                                                    (rslidarDriver*)this, ros::TransportHints().tcpNoDelay(true));
   }
+}
+
+
+lslidarDriver::~lslidarDriver()
+{
+  if (difop_thread_ !=NULL)
+  {
+    printf("error");
+    difop_thread_->interrupt();
+    difop_thread_->join();
+  }
+
 }
 
 /** poll the device
  *
  *  @returns true unless end of file reached
  */
-bool rslidarDriver::poll(void)
+bool lslidarDriver::poll(void)
 {  // Allocate a new shared pointer for zero-copy sharing with other nodelets.
-  rslidar_msgs::rslidarScanPtr scan(new rslidar_msgs::rslidarScan);
+  lslidar_c16_msgs::LslidarC16ScanUnifiedPtr scan(new lslidar_c16_msgs::LslidarC16ScanUnified);
 
   // Since the rslidar delivers data at a very high rate, keep
   // reading and publishing scans as fast as possible.
-    if (difop_input_->getUpdateFlag())
+  int mode = config_.return_mode;
+
+  uint64_t GPSCurrentTS;
+  if (difop_input_->getUpdateFlag())
+  {
+    int packets_rate = ceil(POINTS_ONE_CHANNEL_PER_SECOND/BLOCKS_ONE_CHANNEL_PER_PKT);
+    //int mode = difop_input_->getReturnMode();
+    //int mode = config_.return_mode;
+    ROS_INFO("1111packets_rate=%d",packets_rate);
+    packets_rate = ceil(packets_rate/2);
+     ROS_INFO("2222packets_rate=%d",packets_rate);
+    config_.rpm = difop_input_->getRpm();
+    config_.npackets = ceil(packets_rate*60/config_.rpm)*mode;
+    ROS_INFO("config_.npackets=%d",config_.npackets);
+    difop_input_->clearUpdateFlag();
+    ROS_INFO("packet rate is %d, rpm is %3.3f, npacket is %d", packets_rate, config_.rpm, config_.npackets);
+  }
+  //ROS_INFO("rpm is %3.3f, npacket is %d", config_.rpm, config_.npackets);
+  //config_.npackets = config_.npackets/36;
+  scan->packets.resize(config_.npackets);
+ // ROS_INFO("npackets = %d\n",config_.npackets);
+  // use in standard behaviour only
+  for (int i = 0; i < config_.npackets; ++i)
+  {
+
+    while (true)
     {
-      int packets_rate = ceil(POINTS_ONE_CHANNEL_PER_SECOND/BLOCKS_ONE_CHANNEL_PER_PKT);
-      int mode = difop_input_->getReturnMode();
-      if (config_.model == "RS16" && (mode == 1))
-      {
-        packets_rate = ceil(packets_rate/2);
-		  // ROS_INFO("packets_rate=%d",packets_rate);
-      }
-      else if (config_.model == "RS32" && (mode == 0))
-      {
-        packets_rate = packets_rate*2;
-      }
-      config_.rpm = difop_input_->getRpm();
-      config_.npackets = ceil(packets_rate*60/config_.rpm);
-      //ROS_INFO("config_.npackets=%d",config_.npackets);
-      difop_input_->clearUpdateFlag();
-      ROS_INFO("packet rate is %d, rpm is %3.3f, npacket is %d", packets_rate, config_.rpm, config_.npackets);
+      // keep reading until full packet received
+      //ROS_INFO_STREAM("time_offset: " << config_.time_offset);
+      int rc = msop_input_->getPacket(&scan->packets[i], config_.time_offset);
+      if (rc == 0)
+        break;  // got a full packet?
+      if (rc < 0)
+        return false;  // end of file reached?
+
     }
-    //ROS_INFO("rpm is %3.3f, npacket is %d", config_.rpm, config_.npackets);
-    scan->packets.resize(config_.npackets);
-	  //ROS_INFO("config_.npackets2=%d",config_.npackets);
-    // use in standard behaviour only
-    for (int i = 0; i < config_.npackets; ++i)
-    {
-		
-      while (true)
-      {
-        // keep reading until full packet received
-        int rc = msop_input_->getPacket(&scan->packets[i], config_.time_offset);
-        if (rc == 0)
-          break;  // got a full packet?
-        if (rc < 0)
-          return false;  // end of file reached?
-      }
+    if(i==0) {
+      GPSCurrentTS=GPSCountingTS;
     }
 
-    if (time_synchronization_)
-    {
-      sensor_msgs::TimeReference sync_header;
-      // it is already the msop msg
-      // if (pkt->data[0] == 0x55 && pkt->data[1] == 0xaa && pkt->data[2] == 0x05 && pkt->data[3] == 0x0a)
-      // use the first packets
-      rslidar_msgs::rslidarPacket pkt = scan->packets[0];
-      struct tm stm;
-      memset(&stm, 0, sizeof(stm));
-      stm.tm_year = (int)pkt.data[20] + 100;
-      stm.tm_mon  = (int)pkt.data[21] - 1;
-      stm.tm_mday = (int)pkt.data[22];
-      stm.tm_hour = (int)pkt.data[23];
-      stm.tm_min  = (int)pkt.data[24];
-      stm.tm_sec  = (int)pkt.data[25];
-      double stamp_double = mktime(&stm) + 0.001 * (256 * pkt.data[26] + pkt.data[27]) +
-                            0.000001 * (256 * pkt.data[28] + pkt.data[29]);
-      sync_header.header.stamp = ros::Time(stamp_double);
+  }
 
-      output_sync_.publish(sync_header);
-    }
+  if (time_synchronization_)
+  {
+    sensor_msgs::TimeReference sync_header;
+    // it is already the msop msg
+    // if (pkt->data[0] == 0x55 && pkt->data[1] == 0xaa && pkt->data[2] == 0x05 && pkt->data[3] == 0x0a)
+    // use the first packets
+    lslidar_c16_msgs::LslidarC16Packet pkt = scan->packets[0];
+    uint64_t packet_timestamp;
+    packet_timestamp = (pkt.data[1200]  +
+        pkt.data[1201] * pow(2, 8) +
+        pkt.data[1202] * pow(2, 16) +
+        pkt.data[1203] * pow(2, 24)) * 1e3; //ns
+    //ROS_INFO("fpga_time: ns:%lu", packet_timestamp);
+    timeStamp = ros::Time(GPSCurrentTS, packet_timestamp);// s,ns
+    //ROS_INFO("Lidar_time: %f, GPS_time:%lu, fpga_time: ns:%lu",timeStamp.toSec(), GPSCurrentTS, packet_timestamp);
+    sync_header.header.stamp = timeStamp;
+
+    output_sync_.publish(sync_header);
+  }
 
 
   // publish message using time of last packet read
-//  ROS_INFO("Publishing a full rslidar scan.");
-  scan->header.stamp = scan->packets.back().stamp;
+  //  ROS_INFO("Publishing a full scan.");
+  if (time_synchronization_)
+  {
+    scan->header.stamp = timeStamp;
+
+  } else{
+    scan->header.stamp = scan->packets.back().stamp;
+  }
   scan->header.frame_id = config_.frame_id;
   msop_output_.publish(scan);
 
   return true;
 }
 
-void rslidarDriver::difopPoll(void)
+void lslidarDriver::difopPoll(void)
 {
   // reading and publishing scans as fast as possible.
-  rslidar_msgs::rslidarPacketPtr difop_packet_ptr(new rslidar_msgs::rslidarPacket);
+  lslidar_c16_msgs::LslidarC16PacketPtr difop_packet_ptr(new lslidar_c16_msgs::LslidarC16Packet);
   while (ros::ok())
   {
     // keep reading
-    rslidar_msgs::rslidarPacket difop_packet_msg;
+    lslidar_c16_msgs::LslidarC16Packet difop_packet_msg;
     int rc = difop_input_->getPacket(&difop_packet_msg, config_.time_offset);
     if (rc == 0)
     {
       // std::cout << "Publishing a difop data." << std::endl;
       ROS_DEBUG("Publishing a difop data.");
-		//ROS_INFO("config_.npackets=%d",1111);
       *difop_packet_ptr = difop_packet_msg;
       difop_output_.publish(difop_packet_ptr);
+      this->packetTimeStamp[4] = difop_packet_msg.data[41];
+      this->packetTimeStamp[5] = difop_packet_msg.data[40];
+      this->packetTimeStamp[6] = difop_packet_msg.data[39];
+      this->packetTimeStamp[7] = difop_packet_msg.data[38];
+      this->packetTimeStamp[8] = difop_packet_msg.data[37];
+      this->packetTimeStamp[9] = difop_packet_msg.data[36];
+      struct tm cur_time;
+      memset(&cur_time, 0, sizeof(cur_time));
+      cur_time.tm_sec = this->packetTimeStamp[4];
+      cur_time.tm_min = this->packetTimeStamp[5];
+      cur_time.tm_hour = this->packetTimeStamp[6];
+      cur_time.tm_mday = this->packetTimeStamp[7];
+      cur_time.tm_mon = this->packetTimeStamp[8]-1;
+      cur_time.tm_year = this->packetTimeStamp[9]+2000-1900;
+      this->pointcloudTimeStamp = mktime(&cur_time);
+
+      if (GPSCountingTS != this->pointcloudTimeStamp)
+      {
+        cnt_gps_ts = 0;
+        GPSCountingTS = this->pointcloudTimeStamp;
+        // ROS_ERROR("GPSCountingTS=%lu",GPSCountingTS);
+        //to beijing time printing
+        //ROS_INFO("GPS: y:%d m:%d d:%d h:%d m:%d s:%d",cur_time.tm_year+1900,cur_time.tm_mon+1,cur_time.tm_mday,cur_time.tm_hour+8,cur_time.tm_min,cur_time.tm_sec);
+      }
+      else if (cnt_gps_ts == 3)
+      {
+        GPSStableTS = GPSCountingTS;
+      }
+      else
+      {
+        cnt_gps_ts ++;
+      }
     }
     if (rc < 0)
       return;  // end of file reached?
@@ -249,16 +251,5 @@ void rslidarDriver::difopPoll(void)
   }
 }
 
-void rslidarDriver::callback(rslidar_driver::rslidarNodeConfig& config, uint32_t level)
-{
-  ROS_INFO("Reconfigure Request");
-  config_.time_offset = config.time_offset;
-}
-
 // add for time synchronization
-void rslidarDriver::skipNumCallback(const std_msgs::Int32::ConstPtr& skip_num)
-{
-  // std::cout << "Enter skipNumCallback: " << skip_num->data << std::endl;
-  skip_num_ = skip_num->data;
-}
-}  // namespace rslidar_driver
+}  // namespace lslidar_c16_driver

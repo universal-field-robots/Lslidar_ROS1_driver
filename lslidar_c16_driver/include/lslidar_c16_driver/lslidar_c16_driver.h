@@ -1,60 +1,51 @@
-/* -*- mode: C++ -*- */
 /*
- *  Copyright (C) 2012 Austin Robot Technology, Jack O'Quin
- *	Copyright (C) 2017 Robosense, Tony Zhang
+ * This file is part of lslidar_c16 driver.
  *
- *  License: Modified BSD Software License Agreement
+ * The driver is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- *  $Id$
+ * The driver is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with the driver.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/** \file
- *
- *  ROS driver interface for the RSLIDAR 3D LIDARs
- */
-#ifndef _RSDRIVER_H_
-#define _RSDRIVER_H_
+#ifndef _LS_C16_DRIVER_H_
+#define _LS_C16_DRIVER_H_
 
 #include <string>
 #include <ros/ros.h>
 #include <ros/package.h>
 #include <std_msgs/Int32.h>
-#include <diagnostic_updater/diagnostic_updater.h>
-#include <diagnostic_updater/publisher.h>
-#include <dynamic_reconfigure/server.h>
-#include <rslidar_driver/rslidarNodeConfig.h>
 #include <pcl/point_types.h>
 #include <pcl_ros/impl/transforms.hpp>
 #include <pcl_conversions/pcl_conversions.h>
 #include "input.h"
 
-namespace rslidar_driver
+namespace lslidar_c16_driver
 {
-class rslidarDriver
+class lslidarDriver
 {
 public:
   /**
- * @brief rslidarDriver
+ * @brief lslidarDriver
  * @param node          raw packet output topic
  * @param private_nh    通过这个节点传参数
  */
-  rslidarDriver(ros::NodeHandle node, ros::NodeHandle private_nh);
+  lslidarDriver(ros::NodeHandle node, ros::NodeHandle private_nh);
 
-  ~rslidarDriver()
-  {
-  }
-
+  ~lslidarDriver();
   bool poll(void);
   void difopPoll(void);
 
 private:
-  /// Callback for dynamic reconfigure
-  void callback(rslidar_driver::rslidarNodeConfig& config, uint32_t level);
   /// Callback for skip num for time synchronization
   void skipNumCallback(const std_msgs::Int32::ConstPtr& skip_num);
-
-  /// Pointer to dynamic reconfigure service srv_
-  boost::shared_ptr<dynamic_reconfigure::Server<rslidar_driver::rslidarNodeConfig> > srv_;
 
   // configuration parameters
   struct
@@ -65,6 +56,7 @@ private:
     double rpm;            ///< device rotation rate (RPMs)
     double time_offset;    ///< time in seconds added to each  time stamp
     int cut_angle;
+    int return_mode;     //return wave number
   } config_;
 
   boost::shared_ptr<Input> msop_input_;
@@ -72,20 +64,23 @@ private:
   ros::Publisher msop_output_;
   ros::Publisher difop_output_;
   ros::Publisher output_sync_;
-  // Converter convtor_;
-  /** diagnostics updater */
-  diagnostic_updater::Updater diagnostics_;
-  double diag_min_freq_;
-  double diag_max_freq_;
-  boost::shared_ptr<diagnostic_updater::TopicDiagnostic> diag_topic_;
+  // Converter convtor_
   boost::shared_ptr<boost::thread> difop_thread_;
 
   // add for time synchronization
   bool time_synchronization_;
-  uint32_t skip_num_;
-  ros::Subscriber skip_num_sub_;
+  unsigned char packetTimeStamp[10];
+  uint64_t pointcloudTimeStamp;
+  uint64_t GPSStableTS;
+  uint64_t GPSCountingTS;
+  uint64_t last_FPGA_ts;
+  uint64_t GPS_ts;
+  int cnt_gps_ts;
+  ros::Time timeStamp;
+  uint64_t usec_start;
+
 };
 
-}  // namespace rslidar_driver
+}  // namespace lslidar_driver
 
 #endif

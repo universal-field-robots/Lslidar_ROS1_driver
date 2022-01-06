@@ -1,34 +1,27 @@
 /*
- *  Copyright (C) 2007 Austin Robot Technology, Patrick Beeson
- *  Copyright (C) 2009, 2010 Austin Robot Technology, Jack O'Quin
- *  Copyright (C) 2015, Jack O'Quin
- *	Copyright (C) 2017, Robosense, Tony Zhang
+ * This file is part of lslidar_c16 driver.
  *
+ * The driver is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- *  License: Modified BSD Software License Agreement
+ * The driver is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- *  $Id$
+ * You should have received a copy of the GNU General Public License
+ * along with the driver.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/** \file
- *
- *  Input classes for the RSLIDAR RS-16 3D LIDAR:
- *
- *     Input -- base class used to access the data independently of
- *              its source
- *
- *     InputSocket -- derived class reads live data from the device
- *              via a UDP socket
- *
- *     InputPCAP -- derived class provides a similar interface from a
- *              PCAP dump
- */
-#include "input.h"
 
-//extern volatile sig_atomic_t flag;
-namespace rslidar_driver
+#include "lslidar_c16_driver/input.h"
+
+extern volatile sig_atomic_t flag;
+namespace lslidar_c16_driver
 {
-static const size_t packet_size = sizeof(rslidar_msgs::rslidarPacket().data);
+static const size_t packet_size = sizeof(lslidar_c16_msgs::LslidarC16Packet().data);
 ////////////////////////////////////////////////////////////////////////
 // Input base class implementation
 ////////////////////////////////////////////////////////////////////////
@@ -41,7 +34,7 @@ static const size_t packet_size = sizeof(rslidar_msgs::rslidarPacket().data);
 Input::Input(ros::NodeHandle private_nh, uint16_t port) : private_nh_(private_nh), port_(port)
 {
   npkt_update_flag_ = false;
-  cur_rpm_ = 300;
+  cur_rpm_ = 0;
   return_mode_ = 1;
 
   private_nh.param("device_ip", devip_str_, std::string(""));
@@ -126,8 +119,8 @@ InputSocket::~InputSocket(void)
   (void)close(sockfd_);
 }
 
-/** @brief Get one rslidar packet. */
-int InputSocket::getPacket(rslidar_msgs::rslidarPacket* pkt, const double time_offset)
+/** @brief Get one lslidar packet. */
+int InputSocket::getPacket(lslidar_c16_msgs::LslidarC16Packet* pkt, const double time_offset)
 {
   double time1 = ros::Time::now().toSec();
   struct pollfd fds[1];
@@ -137,8 +130,8 @@ int InputSocket::getPacket(rslidar_msgs::rslidarPacket* pkt, const double time_o
 
   sockaddr_in sender_address;
   socklen_t sender_address_len = sizeof(sender_address);
-  //while (flag == 1)
-  while (true)
+  while (flag == 1)
+ // while (true)
   {
     // Receive packets that should now be available from the
     // socket using a blocking read.
@@ -154,7 +147,7 @@ int InputSocket::getPacket(rslidar_msgs::rslidarPacket* pkt, const double time_o
       }
       if (retval == 0)  // poll() timeout?
       {
-        ROS_WARN("Rslidar poll() timeout");
+        ROS_WARN_THROTTLE(2, "lslidar poll() timeout");
         /*
         char buffer_data[8] = "re-con";
         memset(&sender_address, 0, sender_address_len);          // initialize to zeros
@@ -167,7 +160,7 @@ int InputSocket::getPacket(rslidar_msgs::rslidarPacket* pkt, const double time_o
       }
       if ((fds[0].revents & POLLERR) || (fds[0].revents & POLLHUP) || (fds[0].revents & POLLNVAL))  // device error?
       {
-        ROS_ERROR("poll() reports Rslidar error");
+        ROS_ERROR("poll() reports lslidar error");
         return 1;
       }
     } while ((fds[0].revents & POLLIN) == 0);
@@ -190,34 +183,24 @@ int InputSocket::getPacket(rslidar_msgs::rslidarPacket* pkt, const double time_o
         break;  // done
     }
 
-    ROS_DEBUG_STREAM("incomplete rslidar packet read: " << nbytes << " bytes");
+    ROS_DEBUG_STREAM("incomplete lslidar packet read: " << nbytes << " bytes");
   }
-  //if (flag == 0)
-  //{
-   // abort();
-  //}
+  if (flag == 0)
+  {
+    abort();
+  }
 
   if (pkt->data[0] == 0xA5 && pkt->data[1] == 0xFF && pkt->data[2] == 0x00 && pkt->data[3] == 0x5A)
   {//difop
     int rpm = (pkt->data[8]<<8)|pkt->data[9];
 	  // ROS_INFO("rpm=%d",rpm);
     int mode = 1;
-    /*
-    if ((pkt->data[45] == 0x08 && pkt->data[46] == 0x02 && pkt->data[47] >= 0x09) || (pkt->data[45] > 0x08)
-        || (pkt->data[45] == 0x08 && pkt->data[46] > 0x02))
-    {
-      if (pkt->data[300] != 0x01 && pkt->data[300] != 0x02)
-      {
-        mode = 0;
-      }
-    }
-    */
     if (cur_rpm_ != rpm || return_mode_ != mode)
     {
       cur_rpm_ = rpm;
       return_mode_ = mode;
 
-      //npkt_update_flag_ = true;
+      npkt_update_flag_ = true;
     }
   }
   // Average the times at which we begin and end reading.  Use that to
@@ -263,7 +246,7 @@ InputPCAP::InputPCAP(ros::NodeHandle private_nh, uint16_t port, double packet_ra
   ROS_INFO_STREAM("Opening PCAP file " << filename_);
   if ((pcap_ = pcap_open_offline(filename_.c_str(), errbuf_)) == NULL)
   {
-    ROS_FATAL("Error opening rslidar socket dump file.");
+    ROS_FATAL("Error opening lslidar socket dump file.");
     return;
   }
 
@@ -282,8 +265,8 @@ InputPCAP::~InputPCAP(void)
   pcap_close(pcap_);
 }
 
-/** @brief Get one rslidar packet. */
-int InputPCAP::getPacket(rslidar_msgs::rslidarPacket* pkt, const double time_offset)
+/** @brief Get one lslidar packet. */
+int InputPCAP::getPacket(lslidar_c16_msgs::LslidarC16Packet* pkt, const double time_offset)
 {
   struct pcap_pkthdr* header;
   const u_char* pkt_data;
@@ -337,7 +320,7 @@ int InputPCAP::getPacket(rslidar_msgs::rslidarPacket* pkt, const double time_off
 
     if (empty_)  // no data in file?
     {
-      ROS_WARN("Error %d reading rslidar packet: %s", res, pcap_geterr(pcap_));
+      ROS_WARN("Error %d reading lslidar packet: %s", res, pcap_geterr(pcap_));
       return -1;
     }
 
@@ -353,7 +336,7 @@ int InputPCAP::getPacket(rslidar_msgs::rslidarPacket* pkt, const double time_off
       usleep(rint(repeat_delay_ * 1000000.0));
     }
 
-    ROS_DEBUG("replaying rslidar dump file");
+    ROS_DEBUG("replaying lslidar dump file");
 
     // I can't figure out how to rewind the file, because it
     // starts with some kind of header.  So, close the file
@@ -363,9 +346,9 @@ int InputPCAP::getPacket(rslidar_msgs::rslidarPacket* pkt, const double time_off
     empty_ = true;  // maybe the file disappeared?
   }                 // loop back and try again
 
-  //if (flag == 0)
-  //{
-    //abort();
-  //}
+  if (flag == 0)
+  {
+    abort();
+  }
 }
 }

@@ -1,18 +1,18 @@
 /*
- *  Copyright (C) 2007 Austin Robot Technology, Patrick Beeson
- *  Copyright (C) 2009, 2010 Austin Robot Technology, Jack O'Quin
- *  Copyright (C) 2015, Jack O'Quin
- *	Copyright (C) 2017, Robosense, Tony Zhang
+ * This file is part of lslidar_c16 driver.
  *
+ * The driver is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- *  License: Modified BSD Software License Agreement
+ * The driver is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- *  $Id$
- */
-
-/** \file
- *
- *  Input classes for the RSLIDAR RS-16 3D LIDAR:
+ * You should have received a copy of the GNU General Public License
+ * along with the driver.  If not, see <http://www.gnu.org/licenses/>.
  *
  *     Input -- base class used to access the data independently of
  *              its source
@@ -24,15 +24,15 @@
  *              PCAP dump
  */
 
-#ifndef __RSLIDAR_INPUT_H_
-#define __RSLIDAR_INPUT_H_
+#ifndef __LSLIDAR_INPUT_H_
+#define __LSLIDAR_INPUT_H_
 
 #include <unistd.h>
 #include <stdio.h>
 #include <pcap.h>
 #include <netinet/in.h>
 #include <ros/ros.h>
-#include <rslidar_msgs/rslidarPacket.h>
+#include <lslidar_c16_msgs/LslidarC16Packet.h>
 #include <string>
 #include <sstream>
 #include <sys/socket.h>
@@ -44,20 +44,20 @@
 #include <signal.h>
 #include <sensor_msgs/TimeReference.h>
 
-namespace rslidar_driver
+namespace lslidar_c16_driver
 {
-static uint16_t MSOP_DATA_PORT_NUMBER = 2368;   // rslidar default data port on PC
-static uint16_t DIFOP_DATA_PORT_NUMBER = 2369;  // rslidar default difop data port on PC
-                                                /**
-                                                 *  从在线的网络数据或离线的网络抓包数据（pcap文件）中提取出lidar的原始数据，即packet数据包
-                                                 * @brief The Input class,
-                                                     *
-                                                     * @param private_nh  一个NodeHandled,用于通过节点传递参数
-                                                     * @param port
-                                                     * @returns 0 if successful,
-                                                     *          -1 if end of file
-                                                     *          >0 if incomplete packet (is this possible?)
-                                                 */
+static uint16_t MSOP_DATA_PORT_NUMBER = 2368;   // lslidar default data port on PC
+static uint16_t DIFOP_DATA_PORT_NUMBER = 2369;  // lslidar default difop data port on PC
+/**
+ *  从在线的网络数据或离线的网络抓包数据（pcap文件）中提取出lidar的原始数据，即packet数据包
+ * @brief The Input class,
+     *
+     * @param private_nh  一个NodeHandled,用于通过节点传递参数
+     * @param port
+     * @returns 0 if successful,
+     *          -1 if end of file
+     *          >0 if incomplete packet (is this possible?)
+ */
 class Input
 {
 public:
@@ -67,7 +67,7 @@ public:
   {
   }
 
-  virtual int getPacket(rslidar_msgs::rslidarPacket* pkt, const double time_offset) = 0;
+  virtual int getPacket(lslidar_c16_msgs::LslidarC16Packet* pkt, const double time_offset) = 0;
 
   int getRpm(void);
   int getReturnMode(void);
@@ -83,7 +83,7 @@ protected:
   bool npkt_update_flag_;
 };
 
-/** @brief Live rslidar input from socket. */
+/** @brief Live lslidar input from socket. */
 class InputSocket : public Input
 {
 public:
@@ -91,7 +91,7 @@ public:
 
   virtual ~InputSocket();
 
-  virtual int getPacket(rslidar_msgs::rslidarPacket* pkt, const double time_offset);
+  virtual int getPacket(lslidar_c16_msgs::LslidarC16Packet* pkt, const double time_offset);
 
 private:
 private:
@@ -100,7 +100,7 @@ private:
 
 };
 
-/** @brief rslidar input from PCAP dump file.
+/** @brief lslidar input from PCAP dump file.
    *
    * Dump files can be grabbed by libpcap
    */
@@ -112,7 +112,7 @@ public:
 
   virtual ~InputPCAP();
 
-  virtual int getPacket(rslidar_msgs::rslidarPacket* pkt, const double time_offset);
+  virtual int getPacket(lslidar_c16_msgs::LslidarC16Packet* pkt, const double time_offset);
 
 private:
   ros::Rate packet_rate_;
@@ -127,4 +127,4 @@ private:
 };
 }
 
-#endif  // __RSLIDAR_INPUT_H
+#endif  // __LSLIDAR_INPUT_H

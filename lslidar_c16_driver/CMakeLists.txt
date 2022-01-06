@@ -10,7 +10,6 @@ set(${PROJECT_NAME}_CATKIN_DEPS
     angles
     pcl_ros
     roscpp
-    roslib
     sensor_msgs
     tf
     dynamic_reconfigure
@@ -35,7 +34,9 @@ find_package(Boost REQUIRED COMPONENTS thread)
 find_package(PkgConfig REQUIRED)
 
 
-include_directories(${Boost_INCLUDE_DIR} ${catkin_INCLUDE_DIRS}
+include_directories(
+		include
+		${Boost_INCLUDE_DIR} ${catkin_INCLUDE_DIRS}
 	${dynamic_reconfigure_PACKAGE_PATH}/cmake/cfgbuild.cmake)
 
 
@@ -45,24 +46,24 @@ catkin_package(
     )
 
 
-add_library(lslidar_input input.cc)
+add_library(lslidar_input src/input.cc)
 target_link_libraries(lslidar_input
 		${catkin_LIBRARIES}
 		${libpcap_LIBRARIES})
 
-add_library(lslidar_c16_driver lslidar_c16_driver.cpp)
+add_library(lslidar_c16_driver src/lslidar_c16_driver.cpp)
 target_link_libraries(lslidar_c16_driver
 		lslidar_input
 		${catkin_LIBRARIES})
 
 # build the nodelet version
-add_library(lslidar_c16_driver_nodelet nodelet.cc lslidar_c16_driver.cpp)
-target_link_libraries(driver_nodelet
+add_library(lslidar_c16_driver_nodelet src/lslidar_c16_nodelet.cc src/lslidar_c16_driver.cpp)
+target_link_libraries(lslidar_c16_driver_nodelet
 		lslidar_input
 		${catkin_LIBRARIES}
 		)
 
-add_executable(lslidar_c16_driver_node lslidar_c16_driver_node.cpp)
+add_executable(lslidar_c16_driver_node src/lslidar_c16_driver_node.cpp)
 
 if(catkin_EXPORTED_TARGETS)
 	add_dependencies(lslidar_input ${catkin_EXPORTED_TARGETS})
