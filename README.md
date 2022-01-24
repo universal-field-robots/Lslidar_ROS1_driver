@@ -133,9 +133,9 @@ This is only published when the `publish_laserscan`is set to `true` in the launc
 
 **Node**
 
-
+```
 roslaunch lslidar_ch16_decoder lslidar_ch16.launch
-
+```
 
 Note that this launch file launches both the driver and the decoder, which is the only launch file needed to be used.
 
