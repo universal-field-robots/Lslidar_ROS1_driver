@@ -5,7 +5,7 @@ ROS Installation
 
 Before starting this turorial, please complete installation . This tutorial assumes that Ubuntu is being used.
 
-# lslidar_ch32_V3.0
+# lslidar_ch32_V2.0
 
 ## Description
 
