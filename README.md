@@ -1,74 +1,151 @@
-# lslidar_ch
-#version v1.0.0_200825
+ROS Installation
+-----
 
-## version track
-Author: leo
-### ver2.0.3 leo
+[ubuntu](http://wiki.ros.org/Installation/Ubuntu)
+
+Before starting this turorial, please complete installation . This tutorial assumes that Ubuntu is being used.
+
+# lslidar_ch64_V1.0
 
 ## Description
-The `lslidar_ch` package is a linux ROS driver for lslidar ch.
-The package is tested on Ubuntu 16.04 with ROS kinetic.
 
-## Compling
-This is a Catkin package. Make sure the package is on `ROS_PACKAGE_PATH` after cloning the package to your workspace. And the normal procedure for compling a catkin package will work.
+The `lslidar_ch64_v1.0` package is a linux ROS driver for lslidar CH64_V1.0.
+
+Supported Operating
+----
+
+Ubuntu 16.04 Kinetic
+Ubuntu 18.04 Melodic
+
+## Connect to the lidar
+
+1. Power the lidar via the included adapter
+2. Connect the lidar to an Ethernet port on your computer.
+3. Assign the computer IP based on the default DEST IP `192.168.1.102.` <br>`sudo ifconfig eth0 192.168.1.102`（eth0 is the network card name ）<br>
+
+## Compiling
+
+This is a Catkin package. Make sure the package is on `ROS_PACKAGE_PATH`  after cloning the package to your workspace. And the normal procedure for compiling a catkin package will work.
 
 ```
-cd your_work_space
-catkin_make 
+cd your_work_space<br>
+cd src<br>
+git clone –b CH64_v1.0 https://github.com/lsLIDAR/lslidar_ros/CH64_v1.0<br>
+catkin_make<br>
+source devel/setup.bash/<br>
 ```
 
-## Example Usage
+## View Data
 
-### lslidar_ch_decoder
+1. Launch the provided pointcloud generation launch file.
 
-**Parameters**
+```
+roslaunch lslidar_ch_decoder lslidar_ch.launch
+```
 
-`lidar_ip` (`string`, `default: 192.168.1.200`)
+1. Launch rviz, with the "laser_link" frame as the fixed frame.
+
+```
+rosrun rviz rviz -f laser_link
+```
+
+1. In the "displays" panel, click `Add`, click`By topic`,then select `pointcloud2`, then press `OK`.
+
+2. In the "Topic" field of the new `pointcloud2` tab, enter `/lslidar_point_cloud`.
+
+### **Parameters**
+
+`device_ip` (`string`, `default: 192.168.1.200`)
 
 By default, the IP address of the device is 192.168.1.200.
 
-`frame_id` (`string`, `default: laser_link`)
+`msop_port`(`int`, `default:2368`)
 
-The frame ID entry for the sent messages.
+Default value: 2368. Data package port. Modifiable, please keep it consistent with the data package port set by the host computer. 
 
-**Published Topics**
+`difop_port`(`int`, `default:2369`)
 
-`lslidar_point_cloud`
+Default value:2369.Device package port. Modifiable, please keep it consistent with the device package port set by the host computer. 
 
-Each message corresponds to a lslidar packet sent by the device through the Ethernet.
+`time_synchronization` (`bool`, `default: true`)
+
+Whether to open the external time synchronization (pre-configuration required). Default value: true (true: yes; false: no). 
+
+### lslidar_ch_driver
+
+`add_multicast`(`bool`,`default: false`)
+
+Default value: false (true: yes; false: no). Whether to switch to the multicast mode. 
+
+`group_ip`(`string`,`default:224.1.1.2`)
+
+Default value: 224.1.1.2. Multicast IP. Enabled when the value of add_multicast is "true".
+
 
 ### lslidar_ch_decoder
 
-**Parameters**
+`frame_id` (`string`, `default: laser_link`)
 
-`min_range` (`double`, `0.3`)
+Default value: laser_link. Point cloud coordinates name.
 
-`max_range` (`double`, `200.0`)
+`point_num` (`int`, `default: 2000`)
 
-Points outside this range will be removed.
+Point cloud number in each frame. Different under various frequency. Default value: 2000.
 
-`frequency` (`frequency`, `10.0`)
+`min_range` (`double`, `default: 0.15`)
 
-Note that the driver does not change the frequency of the sensor. 
+The minimum scanning range. Point cloud data inside this range would be removed. Default value: 0.15 meters.
 
-`publish_point_cloud` (`bool`, `true`)
+`max_range` (`double`, `default: 150.0`)
 
-If set to true, the decoder will additionally send out a local point cloud consisting of the points in each revolution.
+The maximum scanning range. Point cloud data outside this range would be removed. Default value: 150 meters.
+
+`angle_disable_min` (`int`, `default: 0`)
+
+Disable agle starting value. Default value: 0.
+
+`angle_disable_max` (`int`, `default: 0`)
+
+Disable agle end value. Default value: 0. Point cloud data between the starting and end angle would be removed.
+
+`lslidar_point_cloud` (`string`, `default: lslidar_point_cloud`)
+
+Point cloud topic name.
+
+`frequency` (`double`, `default: 10.0`)
+
+Lidar scanning frequency. Default value: 10.0Hz.
+
+`use_gps_ts` (`bool`, `default: true`)
+
+Whether to use GPS time synchronization (pre-configuration required). Default value: true (true: yes; false: no).
+
+`channel_num` (`int`, `default: 16`)
+
+The channel number presented when publish_laserscan is opened. Default value: 16.
+
+`publish_point_cloud` (`bool`, `default: true`)
+
+Publish point cloud topic. Default value: true (true: yes; false: no)
+
+`publish_channel` (`bool`, `default: true`)
+
+Publish channel point cloud topic. Default value: true (true: yes; false: no)
 
 **Published Topics**
-
-`lslidar_sweep` (`lslidar_ch_msgs/LslidarChSweep`)
-
-The message arranges the points within each sweep based on its scan index and azimuth.
 
 `lslidar_point_cloud` (`sensor_msgs/PointCloud2`)
 
 This is only published when the `publish_point_cloud` is set to `true` in the launch file.
 
+`lslidar_packets` (`lslidar_ch_msgs/LslidarchPacket`)
+
+Each message corresponds to a lslidar packet sent by the device through the Ethernet.
+
 **Node**
 
 ```
-roslaunch lslidar_ch_decoder lslidar_ch.launch --screen
+roslaunch lslidar_ch_decoder lslidar_ch.launch
 ```
 
 Note that this launch file launches both the driver and the decoder, which is the only launch file needed to be used.
@@ -76,27 +153,20 @@ Note that this launch file launches both the driver and the decoder, which is th
 
 ## FAQ
 
+## Technical support
 
-## Bug Report
+Any more question please commit an issue.
 
-##Version changes
+Or connect support@lslidar.com
 
-/***********2020-08-25************/
-Original version : LSLIDAR_CH64_V1.0.0_200825_ROSK
-Modify  		 :  lslidar_ch64线ROS驱动kinetic版。					
 
-​	luanch文件说明: 
 
-    <param name="channel_num" value="16"/> //通道选择0-63
-    <param name="publish_point_cloud" value="true"/> //是否发布所有通道点云
-    <param name="publish_channel" value="false"/> //是否发布单通道点云 ，若选择发布则改为true。
 
-查看单通道点云rviz设置：rviz的pointcloud2 的topic 选择/scan_channel。
 
-```
-<param name="angle_disable_min" value="0"/>
-<param name="angle_disable_max" value="0"/>
-单通道点云角度裁剪范围。默认不裁剪。单位角度，30°-150°。
-```
 
-Date			 : 2020-08-25
+
+
+
+
+
+****
