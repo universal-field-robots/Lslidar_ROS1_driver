@@ -1,288 +1,195 @@
-# lslidar_c16
-#version v3.1.1_210922
+ROS Installation
+-----
 
-## version track
-Author: zx
-### ver3.0 zx
+[ubuntu](http://wiki.ros.org/Installation/Ubuntu)
+
+Before starting this turorial, please complete installation . This tutorial assumes that Ubuntu is being used.
+
+# lslidar_c16_V3.0
 
 ## Description
-The `lslidar_c16` package is a linux ROS driver for lslidar c16.
-The package is tested on Ubuntu 16.04/18.04 with ROS kinetic/melodic.
 
-## Compling
-This is a Catkin package. Make sure the package is on `ROS_PACKAGE_PATH` after cloning the package to your workspace. And the normal procedure for compling a catkin package will work.
+The `lslidar_c16_V3.0` package is a linux ROS driver for lslidar C16 V3.0.
+
+Supported Operating
+----
+
+Ubuntu 16.04 Kinetic
+Ubuntu 18.04 Melodic
+
+## Connect to the lidar
+
+1. Power the lidar via the included adapter
+2. Connect the lidar to an Ethernet port on your computer.
+3. Assign the computer IP based on the default DEST IP `192.168.1.102.` <br>`sudo ifconfig eth0 192.168.1.102`（eth0 is the network card name ）<br>
+
+## Compiling
+
+This is a Catkin package. Make sure the package is on `ROS_PACKAGE_PATH`  after cloning the package to your workspace. And the normal procedure for compiling a catkin package will work.
 
 ```
-cd your_work_space
-catkin_make 
+cd your_work_space<br>
+cd src<br>
+git clone –b C16_v3.0 https://github.com/lsLIDAR/lslidar_ros/C16_v3.0<br>
+catkin_make<br>
+source devel/setup.bash/<br>
 ```
 
-## Example Usage
+## View Data
 
-### lslidar_c16_decoder
+1. Launch the provided pointcloud generation launch file.
 
-**Parameters**
+```
+roslaunch lslidar_c16_decoder lslidar_c16.launch
+```
 
-`lidar_ip` (`string`, `default: 192.168.1.200`)
+1. Launch rviz, with the "laser_link" frame as the fixed frame.
+
+```
+rosrun rviz rviz -f laser_link
+```
+
+1. In the "displays" panel, click `Add`, click`By topic`,then select `pointcloud2`, then press `OK`.
+
+2. In the "Topic" field of the new `pointcloud2` tab, enter `/lslidar_point_cloud`.
+
+## **Parameters**
+
+``device_ip` (`string`, `default: 192.168.1.200`)
 
 By default, the IP address of the device is 192.168.1.200.
 
+`msop_port`(`int`, `default:2368`)
+
+Default value: 2368. Data package port. Modifiable, please keep it consistent with the data package port set by the host computer. 
+
+`difop_port`(`int`, `default:2369`)
+
+Default value:2369.Device package port. Modifiable, please keep it consistent with the device package port set by the host computer. 
+
+`return_mode` (`int`, `default: 1`)
+
+Return mode. Default value: 1. (1 represents single return mode; 2 represents dual return mode)
+
+`time_synchronization` (`bool`, `default: true`)
+
+Default value: true (true: yes; false: no). Whether to open the GPS time synchronization (pre-configuration required). 
+
+
+### lslidar_c16_driver
+
 `frame_id` (`string`, `default: laser_link`)
 
-The frame ID entry for the sent messages.
+Default value: laser_link. Lidar's coordinates name.
 
-**Published Topics**
+`add_multicast`(`bool`, `default: false`)
 
-`lslidar_point_cloud`
+Default value: false (true: yes; false: no). Whether to switch to the multicast mode. 
 
-Each message corresponds to a lslidar packet sent by the device through the Ethernet.
+`group_ip`(`string`, `default:224.1.1.2`)
+
+Default value: 224.1.1.2. Multicast IP. Enabled when the value of add_multicast is "true".
+
+`rpm` (`int`, `default: 600`)
+
+Lidar's rotate speed. Default value: 600R/M. Modifiable, please keep it consistent with lidar frequency: 5Hz 300R/M，10Hz 600R/M，20Hz 1200R/M
+
 
 ### lslidar_c16_decoder
 
-**Parameters**
+`min_range` (`double`, `default: 0.15`)
 
-`min_range` (`double`, `0.3`)
+The minimum scanning range. Point cloud data inside this range would be removed. Default value: 0.15 meters.
 
-`max_range` (`double`, `200.0`)
+`max_range` (`double`, `default: 150.0`)
 
-Points outside this range will be removed.
+The maximum scanning range. Point cloud data outside this range would be removed. Default value: 150 meters.
 
-`frequency` (`frequency`, `10.0`)
+`frequency` (`int`, `default: 10`)
 
-Note that the driver does not change the frequency of the sensor. 
+Lidar scanning frequency. Default value: 10Hz.
 
-`publish_point_cloud` (`bool`, `true`)
+`config_vert` (`bool`, `default: true`)
 
-If set to true, the decoder will additionally send out a local point cloud consisting of the points in each revolution.
+Whether to open lidar vertical angle configuration calibration. Default value: true (ture: yes; false: no)
+
+`print_vert` (`bool`, `default: false`)
+
+Whether to open lidar vertical angle print. Default value: false (ture: yes; false: no)
+
+`degree_mode` (`int`, `default: 2`)
+
+Lidar vertical angle resolution mode. Default value: 2 (1 represents 1.33°; 2 represnets 2°). The resolution is set by the factory. To modify it, please refer to the user manual.
+
+`distance_unit` (`double`, `default: 0.25`)
+
+Lidar's distance resolution. Default value: 0.25 meters. Do not modify.
+
+`scan_start_angle` (`double`, `default: 0.0`)
+
+Start angle of lidar scanning. Default value: 0.0, unit: 0.01°.
+
+`scan_end_angle` (`double`, `default: 36000.0`)
+
+End angle of lidar scanning. Default value: 36000.0, unit: 0.01°.
+
+`scan_num` (`int`, `default: 8`)
+
+Laserscan topic, chosen channel, line number. Default value: 8. Modifiable.
+
+`publish_scan` (`bool`, `default: false`)
+
+Publish publish_scan topic. Default value: false (true: yes; false: no)
+
+`echo_second` (`bool`, `default: false`)
+
+Whether to publish the second return only under dual return mode. Default value: false (true: yes; false: no)
+
+`pointcloud_topic` (`string`, `default: lslidar_point_cloud`)
+
+Topic name of pointcloud 2. Default value: lslidar_point_cloud. Modifiable.
+
+`coordinate_opt` (`bool`, `default: true`)
+
+Point cloud coordinates selection. By default, Lidar's 0° angle is coorespoding to the x axis (true: 0° angle coorespoding to the x axis; false: 0° angle coorespoding to the y axis )
 
 **Published Topics**
 
-`lslidar_sweep` (`lslidar_c16_msgs/LslidarChSweep`)
+`lslidar_point_cloud` (`sensor_msgs/PointCloud2`)
 
-The message arranges the points within each sweep based on its scan index and azimuth.
+This is published the lslidar_point_cloud topic.
 
-`lslidar_pointclou_c16` (`sensor_msgs/PointCloud2`)
+`lslidar_packets` (`lslidar_c16_msgs/Lslidarc16Packet`)
 
-This is only published when the `publish_point_cloud` is set to `true` in the launch file.
+Each message corresponds to a lslidar packet sent by the device through the Ethernet.
+
+`scan` (`lslidar_c16_msgs/LaserScan`)
+
+This is only published when the `publish_scan`is set to `true` in the launch file.
 
 **Node**
 
 ```
-roslaunch lslidar_c16_decoder lslidar_c16.launch --screen
+roslaunch lslidar_c16_decoder lslidar_c16.launch
 ```
+
 Note that this launch file launches both the driver and the decoder, which is the only launch file needed to be used.
 
 
 ## FAQ
 
+## Technical support
 
-## Bug Report
+Any more question please commit an issue.
 
+Or connect support@lslidar.com
 
-##Version changes
-/***********2020-01-03****************/
-Original version : lslidar_c16_v2.02_190919
-Revised version  : lslidar_c16_v2.03_200103
-Modify  		 : Add a new calibration decode for the new lslidar c16
-Author			 : zx
-Date			 : 2020-01-03
 
 
-/***********2020-01-16****************/
-Original version : lslidar_c16_v2.03_200103
-Revised version  : lslidar_c16_v2.6.0_200116
-Modify  		 : Adds the vertical Angle correction file lslidar_c16_db.yaml for the RoS program code
-				   Change the range resolution to 0.25cm according to the v2.6 protocol
-Author			 : zx
-Date			 : 2020-01-16
 
-/***********2020-04-02****************/
-Original version : lslidar_c16_v2.6.0_200116
-Revised version  : lslidar_c16_v2.6.1_200402
-Modify  		 : 1. 增加了读取设备包并解析垂直角度值的功能，用于替换原有固定的垂直角度值。
-		           2. 修改了lslidar_c16.launch文件，用于兼容选择参数和功能
-Author			 : zx
-Date			 : 2020-04-02
 
-luanch文件说明: 
-  <node pkg="lslidar_c16_decoder" type="lslidar_c16_decoder_node" name="lslidar_c16_decoder_node" output="screen">
-    <param name="calibration_file" value="$(find lslidar_c16_decoder)/params/lslidar_c16_db.yaml" />
-    <param name="min_range" value="0.15"/>
-    <param name="max_range" value="150.0"/>
-    <param name="cbMethod" value="true"/>		//cbMethod = true表示增加x,y坐标的偏移计算补偿, false则不加
-    <param name="print_vert" value="true"/>		//print_vert = true 表示打印设备包角度信息， false表示关闭打印信息
-    <param name="config_vert_file" value="false"/>	//config_vert_file = true 表示读取yaml文件中的垂直角度， false则关闭
-    <param name="distance_unit" value="0.25"/>		//distance_unit = 0.25表示距离单位为0.25cm, = 1表示距离单位为1cm
-    <param name="time_synchronization" value="$(arg time_synchronization)"/>
-  </node>
 
-/***********2020-06-06************/
-Original version : lslidar_c16_v2.6.1_200402
-Revised version  : lslidar_c16_v3.0_200606
-Modify  		 : 1. 修改了读取设备包并解析垂直角度值和GPS时间的功能。
 
-​	                      2. 增加了读取设备包并解析3号版版本号，用于兼容V2.0版本雷达。
 
-Author			 : lqm
-Date			 : 2020-06-06
 
-
-
-/***********2020-06-19************/
-Original version :  lslidar_c16_v3.0_200606
-Revised version  : lslidar_c16_v3.0.1_200619
-Modify  		 : 1. 点云校准距离计算方式更新。
-
-Author			 : lqm
-Date			 : 2020-06-19
-
-/***********2020-08-18************/
-Original version :  lslidar_c16_v3.0.1_200619
-Revised version  : LSLIDAR_C16_V3.0.2_200818_ROSK
-Modify  		 : 1. 增加点云中每个点的线号信息。
-
-Author			 : lqm
-Date			 : 2020-08-18
-
-/***********2020-08-26************/
-Original version :  LSLIDAR_C16_V3.0.2_200818_ROSK
-Revised version  : LSLIDAR_C16_V3.0.3_200826_ROSK
-Modify  		 : 1. 更新每一帧点云的起始角度固定在0°附近，结束角度在360°。
-
-Author			 : lqm
-Date			 : 2020-08-26
-
-/***********2020-09-10************/
-Original version : LSLIDAR_C16_V3.0.3_200826_ROSK
-Revised version  : LSLIDAR_C16_V3.0.4_200910_ROSK
-Modify  	:       
-1. 新增兼容垂直角度分辨率为1.33°雷达。
-2. 增加LaserScan 消息类型发布。
-3. 新增扫描角度裁剪。
-4. 更新gps时间解析，秒+1。
-       
-             
-        launch文件说明：
-​	            <param name="degree_mode" value="1"/>   <!--1表示垂直角度分辨率为1.33°，2表示垂直角度分辨率为2° -->
- 		    <param name="scan_start_angle" value="0.0"/>     <!-- 扫描裁剪起始角-->
-    ​                 <param name="scan_end_angle" value="36000.0"/>   <!-- 扫描裁剪结束角，单位0.01°-->
-    ​                <param name="scan_num" value="8"/>      <!--LaserScan选择的通道-->
-    ​                <param name="publish_scan" value="false"/>   <!--是否发布LaserScan消息类型-->
-
-Author			 : lqm
-Date			 : 2020-09-10
-
-
-
-/***********2020-12-02************/
-Original version : LSLIDAR_C16_V3.0.4_200910_ROSK
-Revised version  : LSLIDAR_C16_V3.0.6_201202_ROSK
-Modify  	:       
-
-1. 兼容 Ubuntu18.04的ROS melodic。
-
-2. 新增nodelet.launch文件。
-
-3. 去除线号（lines/ring）信息，使用标准点云数据类型。
-       
-             
-
-       launch文件说明：
-
-   ​	           <arg name="time_synchronization" default="false" />
-
-   <！--默认 ，时间同步为false。如果接GPS模块授时，则需改为 true。-->
-
-Author			 : lqm
-Date			 : 2020-12-02
-
-/***********2021-04-08************/
-Original version :  LSLIDAR_C16_V3.0.6_201202_ROSK
-Revised version  : LSLIDAR_C16_V3.0.8_210408_ROS
-Modify  	:       
-
-1. 新增可以单独显示第二次回波点云模式，只针对双回波雷达有效。
-
-2. 增加静态坐标转换示例。          
-
-   ```xml
-   lslidar_c16.launch文件说明：
-       <arg name="return_mode" default="1" />
-       <param name="echo_second" value="false"/>
-    <!--node pkg="tf" type="static_transform_publisher" name="laser_link_to_world" args="0 0 0 0 0 0 world laser_link 100" /-->
-   ```
-
-   若需要只显示第二次回波点云的模式，参数改为如下：
-
-      <arg name="return_mode" default="2" />
-       <param name="echo_second" value="true"/>
-
-   静态坐标转换示例，取消注释。
-
-    <node pkg="tf" type="static_transform_publisher" name="laser_link_to_world" args="0 0 0 0 0 0 world laser_link 100" >
-
-   并根据实际需求 ，调整 0 0 0 0 0 0 这6个参数值（XYZ和xyz轴旋转角度）。
-
-Author			 : lqm
-Date			 : 2021-04-08
-
-
-
-/***********2021-07-01************/
-Original version : LSLIDAR_C16_V3.0.8_210408_ROS
-Revised version  : LSLIDAR_C16_V3.0.9_210701_ROS
-Modify  	:       
-
-1. 新增启动launch文件时，打开rviz。
-
-2. 添加了service通信控制上下电的功能。
-
-   另开终端，输入以下命令:   
-
-   ```shell
-    source devel/setup.bash  
-    rosservice call /lslidarcontrol 1  //上电
-    rosservice call /lslidarcontrol 0  //下电
-   ```
-
-Author			 : lqm
-Date			 : 2021-07-01
-
-/***********2021-07-26************/
-Original version : LSLIDAR_C16_V3.0.9_210701_ROS
-Revised version  : LSLIDAR_C16_V3.1.0_210726_ROS
-Modify  	:       
-
-1. 新增点的线号和时间戳。
-2. 增加install编译。
-3.  修改同一工作空间下编译不同雷达驱动报错问题。
-
-Author			 : lqm
-Date			 : 2021-07-26
-
-
-
-2021-09-22
-
-原始版本：LSLIDAR_C16_V3.1.0_210726_ROS
-
-修订版本：LSLIDAR_C16_V3.1.1_210922_ROS
-
-更新内容：
-
-1、增加坐标系选择，默认雷达0度角对应x轴
-
-launch 文件说明：
-
-~~~xml
-<arg name="time_synchronization" default="false" />  //默认未开启GPS授时
-<arg name="return_mode" default="1" />  //默认单回波，双回波雷达改为2
-<param name="degree_mode" value="2"/>  //雷达垂直角度分辨率，默认2代表2度分辨率，1代表1.33度分辨率
-<param name="distance_unit" value="0.25"/>  //距离分辨率0.25
-<param name="pointcloud_topic" value="lslidar_point_cloud"/> //lslidar_point_cloud为点云话题名，可改
-<param name="coordinate_opt" value="true"/> // 坐标系，默认雷达0度角对应x轴，false为雷达0度角对应y轴
-
-~~~
-
-
-
+****
