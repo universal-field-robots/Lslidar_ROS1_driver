@@ -13,6 +13,7 @@ add_message_files(
   LslidarN301Point.msg
   LslidarN301Scan.msg
   LslidarN301Sweep.msg
+  LslidarN301Difop.msg
 )
 generate_messages(DEPENDENCIES std_msgs)
 

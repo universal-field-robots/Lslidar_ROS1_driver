@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(lslidar_n301_decoder)
 
-add_definitions(-std=c++0x)
+add_compile_options(-std=c++14)
+set( CMAKE_CXX_STANDARD 14)
 
 find_package(catkin REQUIRED COMPONENTS
   roscpp
@@ -58,4 +59,14 @@ target_link_libraries(lslidar_n301_decoder_node
 add_dependencies(lslidar_n301_decoder_node
   ${${PROJECT_NAME}_EXPORTED_TARGETS}
   ${catkin_EXPORTED_TARGETS}
+)
+
+install(TARGETS lslidar_n301_decoder_node
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+install(DIRECTORY launch
+        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
