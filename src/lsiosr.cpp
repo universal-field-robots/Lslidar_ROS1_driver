@@ -1,13 +1,12 @@
 /*******************************************************
-@company: Copyright (C) 2018, Leishen Intelligent System
-@product: serial
-@filename: lsiosr.cpp
+@company: Copyright (C) 2021, Leishen Intelligent System
+@product: LSM10
+@filename: lsm10.cpp
 @brief:
 @version:       date:       author:     comments:
-@v1.0           18-8-21     fu          new
-@v1.5           19-04-18     tongsky    Add flushinput function
+@v1.0           21-2-4      yao          new
 *******************************************************/
-#include "ls01b_v2/lsiosr.h"
+#include "lsm10_v2/lsiosr.h"
 
 namespace ls {
 
@@ -133,9 +132,11 @@ int LSIOSR::read(char *buffer, int length, int timeout)
 {
   memset(buffer, 0, length);
 
-  int	totalBytesRead = 0;
+  int totalBytesRead = 0;
   int rc;
+  int unlink = 0;
   char* pb = buffer;
+
   if (timeout > 0)
   {
     rc = waitReadable(timeout);
@@ -148,8 +149,9 @@ int LSIOSR::read(char *buffer, int length, int timeout)
     while (length > 0)
     {
       rc = ::read(fd_, pb, (size_t)length);
+
       if (rc > 0)
-      {
+      {		
         length -= rc;
         pb += rc;
         totalBytesRead += rc;
@@ -168,8 +170,11 @@ int LSIOSR::read(char *buffer, int length, int timeout)
           break;
         }
       }
-
+	  unlink++;
       rc = waitReadable(20);
+	  if(unlink > 10)
+		  return -1;
+	  
       if (rc <= 0)
       {
         break;
@@ -179,6 +184,7 @@ int LSIOSR::read(char *buffer, int length, int timeout)
   else
   {
     rc = ::read(fd_, pb, (size_t)length);
+
     if (rc > 0)
     {
       totalBytesRead += rc;
@@ -188,16 +194,6 @@ int LSIOSR::read(char *buffer, int length, int timeout)
       printf("read error\n");
       return -1;
     }
-  }
-
-  if(0)
-  {
-    printf("Serial Rx: ");
-    for(int i = 0; i < totalBytesRead; i++)
-    {
-      printf("%02X ", (buffer[i]) & 0xFF);
-    }
-    printf("\n\n");
   }
 
   return totalBytesRead;
@@ -370,38 +366,28 @@ int LSIOSR::send(const char* buffer, int length, int timeout)
     }
   }
 
-  if(0)
-  {
-    printf("Serial Tx: ");
-    for(int i = 0; i < totalBytesWrite; i++)
-    {
-      printf("%02X ", (buffer[i]) & 0xFF);
-    }
-    printf("\n\n");
-  }
-
   return totalBytesWrite;
 }
 
 int LSIOSR::init()
 {
-  int error_code = 0;
+	int error_code = 0;
+		
+	fd_ = open(port_.c_str(), O_RDWR|O_NOCTTY|O_NDELAY);
+	if (0 < fd_)
+	{
+		error_code = 0;
+		setOpt(DATA_BIT_8, PARITY_NONE, STOP_BIT_1);//设置串口参数
+		//printf("open_port %s  OK !\n", port_.c_str());
+	}
+	else
+	{
+		error_code = -1;
+		//printf("open_port %s ERROR !\n", port_.c_str());
+	}
+	//printf("LSM10::Init\n");
 
-  fd_ = open(port_.c_str(), O_RDWR|O_NOCTTY|O_NDELAY);
-  if (0 < fd_)
-  {
-    error_code = 0;
-    setOpt(DATA_BIT_8, PARITY_NONE, STOP_BIT_1);//设置串口参数
-    printf("open_port %s , fd %d OK !\n", port_.c_str(), fd_);
-  }
-  else
-  {
-    error_code = -1;
-    printf("open_port %s ERROR !\n", port_.c_str());
-  }
-  printf("LSIOSR::Init\n");
-
-  return error_code;
+	return error_code;
 }
 
 int LSIOSR::close()
@@ -414,7 +400,7 @@ std::string LSIOSR::getPort()
   return port_;
 }
 
-int LSIOSR::setPort(std::string name)
+int LSIOSR::setPortName(std::string name)
 {
   port_ = name;
   return 0;
