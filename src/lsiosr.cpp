@@ -1,13 +1,12 @@
 /*******************************************************
-@company: Copyright (C) 2018, Leishen Intelligent System
+@company: Copyright (C) 2021, Leishen Intelligent System
 @product: serial
 @filename: lsiosr.cpp
 @brief:
 @version:       date:       author:     comments:
-@v1.0           18-8-21     fu          new
-@v1.5           19-04-18     tongsky    Add flushinput function
+@v1.0           21-8-21     fu          new
 *******************************************************/
-#include "ls01b_v2/lsiosr.h"
+#include "lsn10/lsiosr.h"
 
 namespace ls {
 
@@ -26,48 +25,30 @@ LSIOSR::~LSIOSR()
 {
   close();
 }
-/* 串口配置的函数 */
-int LSIOSR::setOpt(int nBits, uint8_t nEvent, int nStop)
+
+/* Function of serial port configuration  */
+int LSIOSR::setOpt()
 {
   struct termios newtio, oldtio;
-  /*保存测试现有串口参数设置，在这里如果串口号等出错，会有相关的出错信息*/
-  if (tcgetattr(fd_, &oldtio) != 0)
+
+  if (tcgetattr(fd_, &oldtio) == -1)
   {
     perror("SetupSerial 1");
     return -1;
   }
   bzero(&newtio, sizeof(newtio));
-  /*步骤一，设置字符大小*/
-  newtio.c_cflag |= CLOCAL;   //如果设置，modem 的控制线将会被忽略。如果没有设置，则 open()函数会阻塞直到载波检测线宣告 modem 处于摘机状态为止。
-  newtio.c_cflag |= CREAD;    //使端口能读取输入的数据
-  /*设置每个数据的位数*/
-  switch (nBits)
-  {
-  case 7:
-    newtio.c_cflag |= CS7;
-    break;
-  case 8:
-    newtio.c_cflag |= CS8;
-    break;
-  }
-  /*设置奇偶校验位*/
-  switch (nEvent)
-  {
-  case 'O': //奇数
-    newtio.c_iflag |= (INPCK | ISTRIP);
-    newtio.c_cflag |= PARENB;   //使能校验，如果不设PARODD则是偶校验
-    newtio.c_cflag |= PARODD;   //奇校验
-    break;
-  case 'E': //偶数
-    newtio.c_iflag |= (INPCK | ISTRIP);
-    newtio.c_cflag |= PARENB;
-    newtio.c_cflag &= ~PARODD;
-    break;
-  case 'N':  //无奇偶校验位
-    newtio.c_cflag &= ~PARENB;
-    break;
-  }
-  /*设置波特率*/
+
+	newtio.c_cflag |= (tcflag_t)(CLOCAL | CREAD | CS8 | CRTSCTS);
+    newtio.c_cflag &= (tcflag_t) ~(CSTOPB | PARENB | PARODD);
+    newtio.c_lflag &= (tcflag_t) ~(ICANON | ECHO | ECHOE | ECHOK | ECHONL |
+                                    ISIG | IEXTEN);  
+    newtio.c_oflag &= (tcflag_t) ~(OPOST);
+    newtio.c_iflag &= (tcflag_t) ~(IXON | IXOFF | INLCR | IGNCR | ICRNL | IGNBRK);
+
+    newtio.c_cc[VMIN] = 0;
+    newtio.c_cc[VTIME] = 0;
+	
+  /*Set the baud rate */
   switch (baud_rate_)
   {
   case 2400:
@@ -84,42 +65,30 @@ int LSIOSR::setOpt(int nBits, uint8_t nEvent, int nStop)
     break;
   case 115200:
     cfsetispeed(&newtio, B115200);
-    cfsetospeed(&newtio, B115200);
+   cfsetospeed(&newtio, B115200);
     break;
   case 230400:
     cfsetispeed(&newtio, B230400);
-    cfsetospeed(&newtio, B230400);
+   cfsetospeed(&newtio, B230400);
     break;
   case 460800:
     cfsetispeed(&newtio, B460800);
-    cfsetospeed(&newtio, B460800);
+   cfsetospeed(&newtio, B460800);
     break;
   default:
     cfsetispeed(&newtio, B9600);
-    cfsetospeed(&newtio, B9600);
+   cfsetospeed(&newtio, B9600);
     break;
   }
 
-  /*
-   * 设置停止位
-   * 设置停止位的位数， 如果设置，则会在每帧后产生两个停止位， 如果没有设置，则产生一个
-   * 停止位。一般都是使用一位停止位。需要两位停止位的设备已过时了。
-   * */
-  if (nStop == 1)
-    newtio.c_cflag &= ~CSTOPB;
-  else if (nStop == 2)
-    newtio.c_cflag |= CSTOPB;
-  /*设置等待时间和最小接收字符*/
-  newtio.c_cc[VTIME] = 0;
-  newtio.c_cc[VMIN] = 0;
-  /*处理未接收字符*/
-  tcflush(fd_, TCIFLUSH);
-  /*激活新配置*/
-  if ((tcsetattr(fd_, TCSANOW, &newtio)) != 0)
+
+  if ((tcsetattr(fd_, TCSANOW, &newtio)) == -1)
   {
     perror("serial set error");
     return -1;
   }
+
+  tcflush(fd_, TCIFLUSH);
 
   return 0;
 }
@@ -128,17 +97,20 @@ void LSIOSR::flushinput() {
   tcflush(fd_, TCIFLUSH);
 }
 
-/* 从串口中读取数据 */
+/* Read data from the serial port  */
 int LSIOSR::read(char *buffer, int length, int timeout)
 {
   memset(buffer, 0, length);
 
   int	totalBytesRead = 0;
   int rc;
+  int unlink = 0;
   char* pb = buffer;
+
   if (timeout > 0)
   {
     rc = waitReadable(timeout);
+
     if (rc <= 0)
     {
       return (rc == 0) ? 0 : -1;
@@ -148,16 +120,10 @@ int LSIOSR::read(char *buffer, int length, int timeout)
     while (length > 0)
     {
       rc = ::read(fd_, pb, (size_t)length);
-      if (rc > 0)
-      {
-        length -= rc;
-        pb += rc;
-        totalBytesRead += rc;
 
-        if (length == 0)
-        {
-          break;
-        }
+      if (rc > 0)
+      {	
+          return rc;
       }
       else if (rc < 0)
       {
@@ -168,8 +134,12 @@ int LSIOSR::read(char *buffer, int length, int timeout)
           break;
         }
       }
-
+	  unlink++;
       rc = waitReadable(20);
+
+	  if(unlink > 10)
+		  return -1;
+	  
       if (rc <= 0)
       {
         break;
@@ -179,6 +149,7 @@ int LSIOSR::read(char *buffer, int length, int timeout)
   else
   {
     rc = ::read(fd_, pb, (size_t)length);
+
     if (rc > 0)
     {
       totalBytesRead += rc;
@@ -188,16 +159,6 @@ int LSIOSR::read(char *buffer, int length, int timeout)
       printf("read error\n");
       return -1;
     }
-  }
-
-  if(0)
-  {
-    printf("Serial Rx: ");
-    for(int i = 0; i < totalBytesRead; i++)
-    {
-      printf("%02X ", (buffer[i]) & 0xFF);
-    }
-    printf("\n\n");
   }
 
   return totalBytesRead;
@@ -300,7 +261,7 @@ int LSIOSR::waitWritable(int millis)
   return rc;
 }
 
-/* 向串口中发送数据 */
+/* Send data to the serial port  */
 int LSIOSR::send(const char* buffer, int length, int timeout)
 {
   if (fd_ < 0)
@@ -383,41 +344,29 @@ int LSIOSR::send(const char* buffer, int length, int timeout)
   return totalBytesWrite;
 }
 
-int LSIOSR::init()
+int LSIOSR::init(int type)
 {
-  int error_code = 0;
+	int error_code = 0;
 
-  fd_ = open(port_.c_str(), O_RDWR|O_NOCTTY|O_NDELAY);
-  if (0 < fd_)
-  {
-    error_code = 0;
-    setOpt(DATA_BIT_8, PARITY_NONE, STOP_BIT_1);//设置串口参数
-    printf("open_port %s , fd %d OK !\n", port_.c_str(), fd_);
-  }
-  else
-  {
-    error_code = -1;
-    printf("open_port %s ERROR !\n", port_.c_str());
-  }
-  printf("LSIOSR::Init\n");
-
+	fd_ = open(port_.c_str(), O_RDWR|O_NOCTTY|O_NONBLOCK);
+	if (0 < fd_)
+	{
+		error_code = 0;
+		setOpt();
+		printf("open_port %s , fd %d OK !\n", port_.c_str(), fd_);
+	}
+	else
+	{
+		error_code = -1;
+		if(type == 1)
+			printf("open_port %s ERROR !\n", port_.c_str());
+	}
   return error_code;
 }
 
 int LSIOSR::close()
 {
   ::close(fd_);
-}
-
-std::string LSIOSR::getPort()
-{
-  return port_;
-}
-
-int LSIOSR::setPort(std::string name)
-{
-  port_ = name;
-  return 0;
 }
 
 }
