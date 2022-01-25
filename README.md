@@ -1,69 +1,119 @@
-# lslidar_n301
+ROS Installation
+-----
+
+[ubuntu](http://wiki.ros.org/Installation/Ubuntu)
+
+Before starting this turorial, please complete installation . This tutorial assumes that Ubuntu is being used.
+
+# lslidar_m10_net_v1.0
 
 ## Description
-The `lslidar_n301` package is a linux ROS driver for lslidar n301.
-The package is tested on Ubuntu 14.04 with ROS indigo.
 
-## Compling
-This is a Catkin package. Make sure the package is on `ROS_PACKAGE_PATH` after cloning the package to your workspace. And the normal procedure for compling a catkin package will work.
+The `lslidar_m10` package is a linux ROS driver for lslidar m10_net_v1.0
+
+Supported Operating
+----
+
+Ubuntu 16.04 Kinetic
+Ubuntu 18.04 Melodic
+
+## Connect to the lidar
+
+1. Power the lidar via the included adapter
+2. Connect the lidar to an Ethernet port on your computer.
+3. Assign the computer IP based on the default DEST IP `192.168.1.102.` <br>`sudo ifconfig eth0 192.168.1.102`（eth0 is the network card name ）<br>
+
+## Compiling
+
+This is a Catkin package. Make sure the package is on `ROS_PACKAGE_PATH`  after cloning the package to your workspace. And the normal procedure for compiling a catkin package will work.
 
 ```
-cd your_work_space
-catkin_make 
+cd your_work_space<br>
+cd src<br>
+git clone –b M10_net_v1.0 https://github.com/lsLIDAR/lslidar_ros/M10_net_v1.0<br>
+catkin_make<br>
+source devel/setup.bash/<br>
 ```
 
-## Example Usage
+## View Data
 
-### lslidar_n301_driver
+1. Launch the provided pointcloud generation launch file.
 
-**Parameters**
+```
+roslaunch lslidar_m10_decoder lslidar_m10.launch
+```
 
-`device_ip` (`string`, `default: 192.168.1.222`)
+1. Launch rviz, with the "laser_link" frame as the fixed frame.
 
-By default, the IP address of the device is 192.168.1.222.
+```
+rosrun rviz rviz -f laser_link
+```
 
-`frame_id` (`string`, `default: lslidar`)
+1. In the "displays" panel, click `Add`, click`By topic`,then select `LaserScan`, then press `OK`.
 
-The frame ID entry for the sent messages.
+2. In the "Topic" field of the new `LaserScan` tab, enter `/scan`.
+
+## **Parameters**
+
+### lslidar_m10_driver
+
+`frame_id` (`string`, `default: laser_link`)
+
+Default value: laser_link. Lidar coordinates name.
+
+`device_ip` (`string`, `default: 192.168.1.200`)
+
+By default, the IP address of the device is 192.168.1.200.
+
+`device_port`(`int`, `default:2368`)
+
+Default value:2368. Data package port. 
+
+
+### lslidar_m10_decoder
+
+`child_frame_id` (`string`, `default: laser_link`)
+
+Lidar coordinates name. Default value: laser_link
+
+`scan_topic` (`string`, `default: scan`)
+
+Lidar data topic name. Default value: scan.
+
+`point_num` (`int`, `default: 948`)
+
+Point cloud number at ratate speed of 10Hz. Default value: 948.
+
+`angle_disable_min` (`double`, `default: 0.0`)
+
+Disable agle starting value. Default value: 0.
+
+`angle_disable_max` (`double`, `default: 0.0`)
+
+Disable agle end value. Default value: 0. Point cloud data between the starting and end angle would be removed.
+
+`min_range` (`double`, `default: 0.3`)
+
+The minimum scanning range. Point cloud data inside this range would be removed. Default value: 0.3 meters.
+
+`max_range` (`double`, `default: 100.0`)
+
+The maximum scanning range. Point cloud data outside this range would be removed. Default value: 100 meters.
 
 **Published Topics**
 
-`lslidar_packets` (`lslidar_n301_msgs/LslidarN301Packet`)
+`lslidar_packets` (`lslidar_m10_msgs/Lslidarm10Packet`)
 
 Each message corresponds to a lslidar packet sent by the device through the Ethernet.
 
-### lslidar_n301_decoder
+`scan` (`lslidar_m10_msgs/LaserScan`)
 
-**Parameters**
-
-`min_range` (`double`, `0.3`)
-
-`max_range` (`double`, `100.0`)
-
-Points outside this range will be removed.
-
-`frequency` (`frequency`, `20.0`)
-
-Note that the driver does not change the frequency of the sensor. 
-
-`publish_point_cloud` (`bool`, `false`)
-
-If set to true, the decoder will additionally send out a local point cloud consisting of the points in each revolution.
-
-**Published Topics**
-
-`lslidar_sweep` (`lslidar_n301_msgs/LslidarN301Sweep`)
-
-The message arranges the points within each sweep based on its scan index and azimuth.
-
-`lslidar_point_cloud` (`sensor_msgs/PointCloud2`)
-
-This is only published when the `publish_point_cloud` is set to `true` in the launch file.
+This is published the LaserScan topic.
 
 **Node**
 
 ```
-roslaunch lslidar_n301_decoder lslidar_n301.launch
+roslaunch lslidar_m10_decoder lslidar_m10.launch
 ```
 
 Note that this launch file launches both the driver and the decoder, which is the only launch file needed to be used.
@@ -71,15 +121,12 @@ Note that this launch file launches both the driver and the decoder, which is th
 
 ## FAQ
 
+## Technical support
 
-## Bug Report
+Any more question please commit an issue.
 
-Prefer to open an issue. You can also send an E-mail to shaohuashu@lslidar.com
-
-
+Or connect support@lslidar.com
 
 
-RERTION 
-V0.1 2000 points per circle
-v0.2 1000 points per circle
 
+****
