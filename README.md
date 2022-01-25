@@ -26,7 +26,7 @@ This is a Catkin package. Make sure the package is on `ROS_PACKAGE_PATH`  after 
 ```
 cd your_work_space<br>
 cd src<br>
-git clone –b N401-P https://github.com/lsLIDAR/lslidar_ros/N401-P<br>
+git clone –b N401-P https://github.com/Lslidar/lslidar_ros<br>
 catkin_make<br>
 source devel/setup.bash/<br>
 ```
