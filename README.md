@@ -32,7 +32,7 @@ cd your_work_space
 cd src
 git clone –b CH32-G_v2.0 https://github.com/Lslidar/lslidar_ros
 catkin_make
-source devel/setup.bash/
+source devel/setup.bash
 ```
 
 ## View Data
