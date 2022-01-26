@@ -40,7 +40,7 @@ source devel/setup.bash
 1. Launch the provided pointcloud generation launch file.
 
 ```
-roslaunch m10_v2 m10_v2.launch
+roslaunch lsm10_v2 lsm10_v2.launch
 ```
 
 1. Launch rviz, with the "laser_link" frame as the fixed frame.
