@@ -30,7 +30,7 @@ This is a Catkin package. Make sure the package is on `ROS_PACKAGE_PATH`  after 
 ```
 cd your_work_space<br>
 cd src<br>
-git clone –b CH32-G_v1.0 https://github.com/lsLIDAR/lslidar_ros
+git clone –b CH32-G_v1.0 https://github.com/Lslidar/lslidar_ros
 catkin_make<br>
 source devel/setup.bash/<br>
 ```
