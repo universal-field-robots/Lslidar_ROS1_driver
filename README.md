@@ -6,6 +6,7 @@ ROS Installation
 Before starting this turorial, please complete installation . This tutorial assumes that Ubuntu is being used.
 
 # lslidar_ch64W_V1.0
+[Customer service entrance](https://1893520.s5.udesk.cn/im_client/?web_plugin_id=502)
 
 ## Description
 
