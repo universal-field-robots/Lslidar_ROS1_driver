@@ -6,7 +6,7 @@ ROS Installation
 Before starting this turorial, please complete installation . This tutorial assumes that Ubuntu is being used.
 
 # lslidar_m10_net_v1.0
-
+[Customer service entrance](https://1893520.s5.udesk.cn/im_client/?web_plugin_id=502)
 ## Description
 
 The `lslidar_m10` package is a linux ROS driver for lslidar m10_net_v1.0
