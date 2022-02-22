@@ -1,4 +1,4 @@
- *  License: Modified BSD Software License Agreement
+ /*  License: Modified BSD Software License Agreement
  *
  *  $Id$
  */
