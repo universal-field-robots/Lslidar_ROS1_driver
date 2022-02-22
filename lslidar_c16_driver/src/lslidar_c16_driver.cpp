@@ -1,4 +1,3 @@
-/*
  *  Copyright (C) 2007 Austin Robot Technology, Patrick Beeson
  *  Copyright (C) 2009-2012 Austin Robot Technology, Jack O'Quin
  *	Copyright (C) 2017 Robosense, Tony Zhang
