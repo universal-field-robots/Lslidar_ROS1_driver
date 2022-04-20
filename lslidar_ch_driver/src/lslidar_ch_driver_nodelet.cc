@@ -24,7 +24,7 @@
 
 #include <lslidar_ch_driver/lslidar_ch_driver_nodelet.h>
 
-
+volatile sig_atomic_t flag;
 namespace lslidar_ch_driver
 {
 
